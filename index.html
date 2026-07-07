@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>냥냥 — 심심할 땐 냥냥</title>
+<meta name="description" content="퀴즈, 게임, 그리고 계속 늘어나는 심심풀이 콘텐츠. 냥냥에서 오늘의 기분전환을 찾아보세요.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Do+Hyeon&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  :root{
+    --bg: #fff4d6;
+    --bg-deep: #ffe9ad;
+    --paper: #ffffff;
+    --ink: #2b2438;
+    --ink-soft: #6b6178;
+    --coral: #ff6b5b;
+    --coral-deep: #e0503f;
+    --mint: #1fb6a8;
+    --mint-deep: #148d82;
+    --violet: #7c5cfc;
+    --violet-deep: #5f3fe0;
+    --line: rgba(43,36,56,0.08);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Pretendard', -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:'Gaegu', sans-serif; letter-spacing:0.01em;}
+  a{color:inherit; text-decoration:none;}
+  img,svg{display:block;}
+
+  /* ---------- HEADER ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(255,244,214,0.88); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .header-inner{
+    max-width:1080px; margin:0 auto; padding:14px 20px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .logo{font-family:'Gaegu', sans-serif; font-weight:700; font-size:1.7rem; color:var(--coral-deep);}
+  nav.chips{display:flex; gap:8px;}
+  nav.chips a{
+    font-size:0.85rem; font-weight:600; padding:7px 14px; border-radius:999px;
+    background:var(--paper); border:1px solid var(--line); color:var(--ink-soft);
+    white-space:nowrap;
+  }
+  nav.chips a:hover{color:var(--ink); border-color:rgba(43,36,56,0.18);}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    max-width:1080px; margin:0 auto; padding:56px 20px 40px;
+    display:flex; flex-direction:column; align-items:center; text-align:center; gap:18px;
+  }
+  .hero-face{width:112px; height:112px;}
+  .eye{transform-origin:center; transform-box:fill-box; animation:blink 4.6s infinite;}
+  .eye.right{animation-delay:0.05s;}
+  @keyframes blink{
+    0%, 90%, 100% { transform:scaleY(1); }
+    94% { transform:scaleY(0.06); }
+  }
+  h1.hero-title{
+    font-family:'Gaegu', sans-serif; font-weight:700;
+    font-size:clamp(2.3rem, 7vw, 3.4rem); margin:0; line-height:1.25;
+  }
+  h1.hero-title .accent{color:var(--coral-deep);}
+  .hero-sub{font-size:1.05rem; color:var(--ink-soft); max-width:420px; margin:0;}
+  .hero-tags{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:4px;}
+  .hero-tag{
+    font-size:0.82rem; font-weight:700; padding:6px 14px; border-radius:999px; color:#fff;
+  }
+  .tag-test{background:var(--coral);}
+  .tag-game{background:var(--mint);}
+  .tag-toon{background:var(--violet);}
+
+  /* ---------- SECTIONS ---------- */
+  section.category{max-width:1080px; margin:0 auto; padding:36px 0 8px;}
+  .cat-head{display:flex; align-items:baseline; justify-content:space-between; padding:0 20px 16px;}
+  .cat-title{font-family:'Gaegu', sans-serif; font-weight:700; font-size:1.55rem; display:flex; align-items:center; gap:9px;}
+  .cat-dot{width:10px; height:10px; border-radius:50%;}
+  .dot-test{background:var(--coral);} .dot-game{background:var(--mint);} .dot-toon{background:var(--violet);}
+  .cat-more{font-size:0.85rem; color:var(--ink-soft); font-weight:600;}
+
+  .row{
+    display:flex; gap:16px; overflow-x:auto; padding:4px 20px 18px;
+    scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch;
+  }
+  .row::-webkit-scrollbar{height:0;}
+  .card{
+    scroll-snap-align:start; flex:0 0 200px;
+    background:var(--paper); border-radius:20px; overflow:hidden;
+    border:1px solid var(--line); transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .card:hover{transform:translateY(-4px); box-shadow:0 14px 24px -12px rgba(43,36,56,0.25);}
+  .card-thumb{
+    height:130px; display:flex; align-items:center; justify-content:center; font-size:2.6rem;
+    position:relative;
+  }
+  .thumb-test{background:linear-gradient(160deg, #ffe1da, #ffc7ba);}
+  .thumb-game{background:linear-gradient(160deg, #d7f5f0, #b7e9e0);}
+  .thumb-toon{background:linear-gradient(160deg, #e6ddff, #d2c2ff);}
+  .badge{
+    position:absolute; top:10px; left:10px; font-size:0.68rem; font-weight:800;
+    padding:4px 9px; border-radius:999px; color:#fff;
+  }
+  .badge-new{background:var(--coral-deep);}
+  .badge-soon{background:rgba(43,36,56,0.55);}
+  .card-body{padding:14px 14px 16px;}
+  .card-title{font-size:0.98rem; font-weight:700; margin:0 0 4px; line-height:1.35;}
+  .card-desc{font-size:0.8rem; color:var(--ink-soft); margin:0; line-height:1.4;}
+  .card.disabled{opacity:0.62; pointer-events:none;}
+
+  /* ---------- COMING SOON BANNER ---------- */
+  .soon-banner{
+    max-width:1080px; margin:44px auto 0; padding:0 20px;
+  }
+  .soon-card{
+    background:var(--paper); border:1.5px dashed rgba(43,36,56,0.22); border-radius:20px;
+    padding:26px 22px; text-align:center;
+  }
+  .soon-card p{margin:6px 0 0; color:var(--ink-soft); font-size:0.9rem;}
+  .soon-card strong{font-size:1.05rem;}
+
+  footer{
+    margin-top:56px; padding:28px 20px 40px; text-align:center;
+    color:var(--ink-soft); font-size:0.82rem; border-top:1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">냥냥</div>
+    <nav class="chips">
+      <a href="#tests">퀴즈</a>
+      <a href="#games">게임</a>
+      <a href="#toons">4컷툰</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <svg class="hero-face" viewBox="0 0 200 200">
+    <ellipse cx="55" cy="70" rx="16" ry="8" fill="#a89579" transform="rotate(-25 55 70)"/>
+    <ellipse cx="145" cy="70" rx="16" ry="8" fill="#a89579" transform="rotate(25 145 70)"/>
+    <ellipse cx="58" cy="66" rx="8" ry="4" fill="#ffc9c0" transform="rotate(-25 58 66)"/>
+    <ellipse cx="142" cy="66" rx="8" ry="4" fill="#ffc9c0" transform="rotate(25 142 66)"/>
+    <ellipse cx="100" cy="105" rx="72" ry="68" fill="#a89579"/>
+    <line x1="100" y1="55" x2="100" y2="82" stroke="#4a3f30" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+    <line x1="72" y1="60" x2="65" y2="88" stroke="#4a3f30" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+    <line x1="128" y1="60" x2="135" y2="88" stroke="#4a3f30" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+    <ellipse cx="100" cy="140" rx="46" ry="32" fill="#f5f0e8"/>
+    <ellipse cx="145" cy="122" rx="10" ry="6.5" fill="#ff96a0" opacity="0.45"/>
+    <ellipse cx="55" cy="122" rx="9" ry="5.5" fill="#ff96a0" opacity="0.45"/>
+    <g class="eye left">
+      <ellipse cx="76" cy="103" rx="16" ry="18" fill="#efe9db"/>
+      <ellipse cx="78" cy="106" rx="12" ry="14" fill="#8fb87a"/>
+      <ellipse cx="79" cy="108" rx="5.5" ry="11" fill="#2b2438"/>
+      <circle cx="73" cy="98" r="4" fill="#fff"/>
+    </g>
+    <g class="eye right">
+      <ellipse cx="124" cy="103" rx="16" ry="18" fill="#efe9db"/>
+      <ellipse cx="122" cy="106" rx="12" ry="14" fill="#8fb87a"/>
+      <ellipse cx="121" cy="108" rx="5.5" ry="11" fill="#2b2438"/>
+      <circle cx="127" cy="98" r="4" fill="#fff"/>
+    </g>
+    <path d="M92 127 L108 127 L100 138 Z" fill="#ff9fa8"/>
+    <path d="M100 138 L100 145 M100 145 Q92 152 82 144 M100 145 Q108 152 118 144" stroke="#5a4a3a" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </svg>
+  <h1 class="hero-title">심심할 땐, <span class="accent">냥냥</span></h1>
+  <p class="hero-sub">퀴즈 하나, 게임 하나면 지루한 5분이 순식간에 지나가요.</p>
+  <div class="hero-tags">
+    <span class="hero-tag tag-test">퀴즈</span>
+    <span class="hero-tag tag-game">게임</span>
+    <span class="hero-tag tag-toon">4컷툰 · 준비중</span>
+  </div>
+</div>
+
+<section class="category" id="tests">
+  <div class="cat-head">
+    <div class="cat-title"><span class="cat-dot dot-test"></span>퀴즈</div>
+    <span class="cat-more">준비중</span>
+  </div>
+  <div class="row">
+    <div class="card disabled">
+      <div class="card-thumb thumb-test"><span class="badge badge-soon">준비중</span>🐾</div>
+      <div class="card-body">
+        <p class="card-title">나는 어떤 고양이 상일까?</p>
+        <p class="card-desc">성격으로 보는 나의 고양이 유형</p>
+      </div>
+    </div>
+    <div class="card disabled">
+      <div class="card-thumb thumb-test"><span class="badge badge-soon">준비중</span>⚡</div>
+      <div class="card-body">
+        <p class="card-title">3초 문해력 퀴즈</p>
+        <p class="card-desc">이 문장, 제대로 읽으셨나요?</p>
+      </div>
+    </div>
+    <div class="card disabled">
+      <div class="card-thumb thumb-test"><span class="badge badge-soon">준비중</span>💌</div>
+      <div class="card-body">
+        <p class="card-title">나의 밀당 지수는?</p>
+        <p class="card-desc">연애할 때 나도 몰랐던 나의 모습</p>
+      </div>
+    </div>
+    <div class="card disabled">
+      <div class="card-thumb thumb-test"><span class="badge badge-soon">준비중</span>🍀</div>
+      <div class="card-body">
+        <p class="card-title">오늘의 기분 날씨</p>
+        <p class="card-desc">지금 내 마음 상태 한 줄 진단</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="category" id="games">
+  <div class="cat-head">
+    <div class="cat-title"><span class="cat-dot dot-game"></span>게임</div>
+    <span class="cat-more">1개 공개중</span>
+  </div>
+  <div class="row">
+    <a class="card" href="games/bori-adventure.html">
+      <div class="card-thumb thumb-game"><span class="badge badge-new">NEW</span>🐱</div>
+      <div class="card-body">
+        <p class="card-title">보리의 모험</p>
+        <p class="card-desc">골목을 달리는 우리 보리, 얼마나 멀리 갈 수 있을까?</p>
+      </div>
+    </a>
+    <div class="card disabled">
+      <div class="card-thumb thumb-game"><span class="badge badge-soon">준비중</span>🎯</div>
+      <div class="card-body">
+        <p class="card-title">다음 게임 준비중</p>
+        <p class="card-desc">또 어떤 심심풀이가 올라올지 기대해주세요</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="soon-banner" id="toons">
+  <div class="soon-card">
+    <strong>✏️ 4컷툰, 곧 만나요</strong>
+    <p>짧고 재밌는 4컷 만화 코너를 준비하고 있어요. 카테고리는 계속 늘어날 예정입니다.</p>
+  </div>
+</div>
+
+<footer>
+  냥냥 · 심심할 때 잠깐 놀다 가는 곳
+</footer>
+
+</body>
+</html>
