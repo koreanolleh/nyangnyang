@@ -130,8 +130,63 @@
   .result-grade{display:inline-block; font-family:'Jua'; font-size:1.05rem; color:var(--night-2); background:var(--amber); padding:6px 16px; border-radius:999px; margin:4px 0 12px 0;}
   .result-sub{font-size:0.92rem; color:#c9c4e8;}
   .result-actions{width:100%; max-width:360px; display:flex; gap:8px; margin-bottom:20px;}
-  .action-btn{flex:1; font-weight:700; font-size:0.8rem; background:rgba(255,255,255,0.08); color:var(--cream); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:12px 4px; cursor:pointer;}
-  #share-preview{display:none; width:100%; max-width:270px; border-radius:14px; margin-bottom:14px; border:1px solid rgba(255,180,84,0.3);}
+  .action-btn{flex:1; font-weight:700; font-size:0.95rem; background:rgba(255,255,255,0.08); color:var(--cream); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:14px 4px; cursor:pointer;}
+
+  .result-footer-row{width:100%; max-width:360px; display:flex; gap:10px; margin-top:6px;}
+  .btn-secondary{
+    flex:1; font-family:'Jua'; font-size:1.05rem; text-align:center;
+    background:rgba(255,255,255,0.08); color:var(--cream); border:1px solid rgba(255,255,255,0.25);
+    border-radius:14px; padding:15px 4px; cursor:pointer;
+  }
+  .result-footer-row .btn-primary{flex:1.3; margin-top:0;}
+
+  /* ---------- SHARE BOTTOM SHEET ---------- */
+  .share-overlay{
+    position:fixed; inset:0; z-index:200; background:rgba(11,9,8,0.55);
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .share-overlay.show{display:flex;}
+  .share-sheet{
+    width:100%; max-width:480px; background:var(--night); border-radius:22px 22px 0 0;
+    padding:18px 20px 28px; animation:sheetUp 0.22s ease;
+  }
+  @keyframes sheetUp{ from{transform:translateY(24px); opacity:0;} to{transform:translateY(0); opacity:1;} }
+  .share-sheet-header{
+    display:flex; align-items:center; justify-content:space-between;
+    font-family:'Jua'; font-size:1.2rem; color:var(--cream); margin-bottom:16px;
+  }
+  .share-sheet-header button{
+    background:none; border:none; color:#a29ecf; font-size:1.1rem; cursor:pointer; padding:4px 8px;
+  }
+  .share-preview-row{
+    display:flex; align-items:center; gap:12px; background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:10px; margin-bottom:20px;
+  }
+  #share-preview-thumb{width:56px; height:70px; object-fit:cover; border-radius:8px; background:rgba(255,255,255,0.1);}
+  .share-preview-title{font-weight:700; color:var(--cream); font-size:0.98rem;}
+  .share-icon-row{display:grid; grid-template-columns:repeat(3,1fr); gap:18px 8px;}
+  .share-icon-btn{
+    background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:7px;
+    color:#c9c4e8; font-size:0.78rem; font-weight:600; cursor:pointer;
+  }
+  .icon-circle{
+    width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:1.5rem;
+  }
+  .icon-kakao{background:#FEE500; color:#3C1E1E;}
+  .icon-instagram{background:linear-gradient(135deg,#4f5bd5,#962fbf,#d62976,#fa7e1e,#feda75);}
+  .icon-threads{background:#111; color:#fff;}
+  .icon-twitter{background:#000; color:#fff;}
+  .icon-save{background:rgba(255,255,255,0.12); color:var(--cream);}
+  .icon-copy{background:rgba(255,255,255,0.12); color:var(--cream);}
+
+  .toast{
+    position:fixed; left:50%; bottom:40px; transform:translateX(-50%) translateY(20px);
+    background:rgba(18,20,42,0.95); color:#fff3e0; font-weight:600; font-size:0.9rem;
+    padding:12px 20px; border-radius:999px; z-index:300; opacity:0; pointer-events:none;
+    transition:opacity 0.2s ease, transform 0.2s ease; box-shadow:0 8px 20px rgba(0,0,0,0.3);
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
   .lb-box{width:100%; max-width:360px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:16px 18px; margin-bottom:14px;}
   .lb-title{font-family:'Jua'; font-size:1rem; color:var(--amber); margin-bottom:10px;}
   .lb-row{display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.08); font-size:0.92rem;}
@@ -186,12 +241,8 @@
       <div class="result-sub" id="res-sub">먹이 0개 획득</div>
     </div>
 
-    <img id="share-preview" alt="결과 카드"/>
-
     <div class="result-actions">
-      <button class="action-btn" id="btn-share">📤 공유하기</button>
-      <button class="action-btn" id="btn-kakao" style="background:#FEE500; color:#3C1E1E;">💬 카톡 공유</button>
-      <button class="action-btn" id="btn-save">🖼 이미지 저장</button>
+      <button class="action-btn" id="btn-share">📤 결과 공유하기</button>
     </div>
 
     <div class="submit-row">
@@ -205,8 +256,46 @@
       <div id="lb-list" class="lb-loading">불러오는 중...</div>
     </div>
 
-    <button class="btn-primary" id="btn-retry">다시 도전</button>
+    <div class="result-footer-row">
+      <a class="btn-secondary" href="../index.html">메인으로</a>
+      <button class="btn-primary" id="btn-retry">다시 도전</button>
+    </div>
   </section>
+
+  <div class="share-overlay" id="share-overlay">
+    <div class="share-sheet">
+      <div class="share-sheet-header">
+        <span>결과 공유하기</span>
+        <button id="share-sheet-close" aria-label="닫기">✕</button>
+      </div>
+      <div class="share-preview-row">
+        <img id="share-preview-thumb" alt="결과 미리보기"/>
+        <div class="share-preview-title">보리의 모험</div>
+      </div>
+      <div class="share-icon-row">
+        <button class="share-icon-btn" data-action="kakao">
+          <span class="icon-circle icon-kakao">💬</span><span>카카오톡</span>
+        </button>
+        <button class="share-icon-btn" data-action="instagram">
+          <span class="icon-circle icon-instagram">📷</span><span>인스타그램</span>
+        </button>
+        <button class="share-icon-btn" data-action="threads">
+          <span class="icon-circle icon-threads">@</span><span>Threads</span>
+        </button>
+        <button class="share-icon-btn" data-action="twitter">
+          <span class="icon-circle icon-twitter">𝕏</span><span>트위터(X)</span>
+        </button>
+        <button class="share-icon-btn" data-action="save">
+          <span class="icon-circle icon-save">🖼</span><span>이미지 저장</span>
+        </button>
+        <button class="share-icon-btn" data-action="copy">
+          <span class="icon-circle icon-copy">🔗</span><span>링크복사</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
 
 </div>
 
@@ -217,7 +306,9 @@
   const SUPABASE_URL = "https://jqgqaityiirpheazmslv.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_DeR9x8Vih8vCIWAeJ4Llfw_MNhpXnHJ";
   const sb = (SUPABASE_URL.startsWith("http") && window.supabase)
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+      })
     : null;
 
   // ---------- KakaoTalk share ----------
@@ -1325,32 +1416,45 @@
   let shareCanvas = null;
   function renderShareCanvas(){
     shareCanvas = buildShareCard();
-    const img = document.getElementById('share-preview');
-    img.src = shareCanvas.toDataURL('image/png');
-    img.style.display='block';
+    const thumb = document.getElementById('share-preview-thumb');
+    thumb.src = shareCanvas.toDataURL('image/png');
   }
-  document.getElementById('btn-share').addEventListener('click', async ()=>{
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(()=> t.classList.remove('show'), 1800);
+  }
+
+  const shareOverlay = document.getElementById('share-overlay');
+  document.getElementById('btn-share').addEventListener('click', ()=>{
     if(!shareCanvas) renderShareCanvas();
-    try{
-      shareCanvas.toBlob(async blob=>{
-        const file = new File([blob],'cat-adventure.png',{type:'image/png'});
-        if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-          await navigator.share({files:[file], title:'보리의 모험', text:`나는 ${lastResult.dist}m 달렸다! (${lastResult.grade})`});
-        } else {
-          renderShareCanvas();
-          alert('이 기기에서는 공유 시트를 지원하지 않아요. 이미지를 저장해서 공유해보세요.');
-        }
-      });
-    }catch(e){ renderShareCanvas(); }
+    shareOverlay.classList.add('show');
   });
-  document.getElementById('btn-save').addEventListener('click', ()=>{
-    if(!shareCanvas) renderShareCanvas();
-    const a=document.createElement('a'); a.download='cat-adventure-result.png'; a.href=shareCanvas.toDataURL('image/png'); a.click();
+  document.getElementById('share-sheet-close').addEventListener('click', ()=>{
+    shareOverlay.classList.remove('show');
+  });
+  shareOverlay.addEventListener('click', (e)=>{
+    if(e.target === shareOverlay) shareOverlay.classList.remove('show');
   });
 
-  document.getElementById('btn-kakao').addEventListener('click', ()=>{
+  function shareText(){
+    return `나는 ${lastResult.dist}m 달렸다! (${lastResult.grade})`;
+  }
+
+  function downloadShareImage(){
+    if(!shareCanvas) renderShareCanvas();
+    const a=document.createElement('a');
+    a.download='bori-adventure-result.png';
+    a.href=shareCanvas.toDataURL('image/png');
+    a.click();
+  }
+
+  function shareKakao(){
     if(!window.Kakao || !window.Kakao.isInitialized()){
-      alert('카카오톡 공유는 아직 설정 중이에요. (개발자용: KAKAO_JS_KEY를 등록하고, 카카오 디벨로퍼스 앱의 플랫폼 설정에 이 사이트 도메인을 등록해야 동작합니다.)');
+      showToast('카카오톡 공유는 아직 준비 중이에요.');
       return;
     }
     if(!shareCanvas) renderShareCanvas();
@@ -1364,7 +1468,7 @@
             objectType: 'feed',
             content: {
               title: '보리의 모험',
-              description: `나는 ${lastResult.dist}m 달렸다! (${lastResult.grade})`,
+              description: shareText(),
               imageUrl: imageUrl,
               imageWidth: 600,
               imageHeight: 760,
@@ -1376,9 +1480,47 @@
           });
         })
         .catch(err=>{
-          console.error(err);
-          alert('카카오톡 공유 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.');
+          console.error('kakao share error:', err && err.message);
+          showToast('카카오톡 공유 중 문제가 생겼어요.');
         });
+    });
+  }
+
+  function shareTwitter(){
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText())}&url=${encodeURIComponent(window.location.href)}`;
+    window.open(url, '_blank');
+  }
+
+  function shareThreads(){
+    const text = `${shareText()} ${window.location.href}`;
+    const url = `https://www.threads.net/intent/post?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  }
+
+  function shareViaImageApp(appName){
+    downloadShareImage();
+    showToast(`이미지가 저장됐어요! ${appName}에 직접 업로드해보세요`);
+  }
+
+  function copyLink(){
+    const url = window.location.href;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(()=> showToast('링크가 복사됐어요!'))
+        .catch(()=> showToast('복사에 실패했어요.'));
+    } else {
+      showToast('이 브라우저에서는 복사가 지원되지 않아요.');
+    }
+  }
+
+  document.querySelectorAll('.share-icon-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const action = btn.dataset.action;
+      if(action==='kakao') shareKakao();
+      else if(action==='twitter') shareTwitter();
+      else if(action==='instagram') shareViaImageApp('인스타그램');
+      else if(action==='threads') shareThreads();
+      else if(action==='save'){ downloadShareImage(); showToast('이미지가 저장됐어요!'); }
+      else if(action==='copy') copyLink();
     });
   });
 
@@ -1410,8 +1552,9 @@
         </div>
       `).join('');
     }catch(e){
-      console.error(e);
-      list.className='lb-empty'; list.textContent='랭킹을 불러오지 못했어요.';
+      console.error('leaderboard load error:', e && e.message);
+      list.className='lb-empty';
+      list.textContent = '랭킹을 불러오지 못했어요.' + (e && e.message ? ` (${e.message})` : '');
     }
   }
   function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -1432,8 +1575,9 @@
       if(error) throw error;
       nameInput.value=''; btn.textContent='등록 완료!'; await loadLeaderboard();
     }catch(e){
-      console.error(e);
+      console.error('leaderboard submit error:', e && e.message);
       btn.textContent='실패, 다시 시도';
+      showToast('등록 실패' + (e && e.message ? `: ${e.message}` : ''));
     }
     setTimeout(()=>{ btn.disabled=false; btn.textContent='등록'; }, 1500);
   });
