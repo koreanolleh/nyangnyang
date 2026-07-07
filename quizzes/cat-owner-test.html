@@ -144,6 +144,16 @@
     color:var(--ink-soft);
     margin-bottom:20px;
   }
+  .intro-hero-img{
+    display:block;
+    width:140px;
+    height:140px;
+    object-fit:cover;
+    border-radius:50%;
+    border:3px solid var(--mustard);
+    background:#FFF3DC;
+    margin:0 auto 18px;
+  }
   .start-btn{
     width:100%;
     padding:15px;
@@ -180,13 +190,17 @@
   }
   .id-body{ padding:22px; }
   .id-emoji{
-    width:78px;height:78px;
+    width:96px;height:96px;
     border-radius:50%;
     background:#FFF3DC;
     border:2px solid var(--mustard);
-    display:flex;align-items:center;justify-content:center;
-    font-size:38px;
+    overflow:hidden;
     margin:0 auto 14px;
+  }
+  .id-emoji img{
+    width:100%;height:100%;
+    object-fit:cover;
+    display:block;
   }
   .id-type{
     text-align:center;
@@ -366,6 +380,7 @@
   <!-- INTRO -->
   <div class="screen active" id="screen-intro">
     <div class="card">
+      <img class="intro-hero-img" src="images/base.png" alt="냥냥이 집사 유형 테스트 캐릭터"/>
       <p class="intro-body">
         고양이한테 애정표현을 얼마나 적극적으로 하는지, 그리고 얼마나 계획적으로 케어하는지에 따라 집사도 4가지 유형으로 나뉜다는 거 알고 있었나요?<br><br>
         10개의 질문에 솔직하게 답하면 당신의 진짜 집사 유형과, 잘 맞는 고양이 성향까지 알려드릴게요.
@@ -392,7 +407,7 @@
         <span id="idNo">No. 0000</span>
       </div>
       <div class="id-body">
-        <div class="id-emoji" id="idEmoji">🐾</div>
+        <div class="id-emoji"><img id="idEmoji" alt="집사 유형 캐릭터"/></div>
         <div class="id-type" id="idType">-</div>
         <div class="id-sub" id="idSub">-</div>
         <div class="id-desc" id="idDesc">-</div>
@@ -480,9 +495,12 @@ const questions = [
    a:'몇 주 전부터 펫시터·호텔을 예약하고 매뉴얼도 써둔다', b:'날짜가 임박해서 급하게 알아본다'},
 ];
 
+const IMG_BASE = 'images/base.png';
+
 const TYPES = {
   AA: { // skinship + planned
     key:'AA', emoji:'🧑‍✈️',
+    img:'images/manager.png',
     name:'매니저형 집사', sub:'애정도 계획도 완벽한 올코치 스타일',
     desc:'애정 표현에 거리낌이 없으면서 동시에 계획성까지 갖춘, 말 그대로 완벽주의 집사예요. 고양이의 모든 순간을 함께하고 싶어 하면서도 건강 관리와 스케줄, 용품 선택까지 하나하나 철저하게 챙기는 타입입니다.',
     traits:['예방접종·정기검진 일정이 이미 캘린더 앱에 등록되어 있음','고양이가 부르지 않아도 먼저 다가가 스킨십을 건다','새 간식 하나 살 때도 성분표부터 정독한다'],
@@ -490,6 +508,7 @@ const TYPES = {
   },
   AB: { // skinship + spontaneous
     key:'AB', emoji:'🥰',
+    img:'images/clingy.png',
     name:'껌딱지형 집사', sub:'감정 충만, 마음 가는 대로 챙기는 스타일',
     desc:'계획보다는 마음이 먼저 움직이는 타입이에요. 고양이와 붙어 있는 시간 자체가 힐링이라 매일이 즉흥 이벤트고, 정해진 루틴보다는 그 순간 고양이가 원하는 걸 바로 해주는 걸 좋아해요.',
     traits:['핸드폰 사진첩 대부분이 고양이 사진','"오늘 아침 즉흥으로 캣타워 배송 완료" 같은 일이 자주 있음','병원은 컨디션을 보고 감으로 판단하는 편'],
@@ -497,6 +516,7 @@ const TYPES = {
   },
   BA: { // respect + planned
     key:'BA', emoji:'🧐',
+    img:'images/rational.png',
     name:'합리형 집사', sub:'쿨해 보이지만 뒤에서는 완벽한 스타일',
     desc:'애정 표현은 절제하는 편이지만, 필요한 케어는 누구보다 철저해요. "고양이도 사생활이 있다"는 주의라 거리를 두지만, 보이지 않는 곳에서 이미 다 계획되어 있는 타입입니다.',
     traits:['스킨십보다 안전하고 편안한 환경을 세팅하는 데 진심','여행 갈 때 펫시터용 케어 매뉴얼을 따로 작성해둠','고양이가 먼저 다가올 때까지 여유 있게 기다리는 편'],
@@ -504,6 +524,7 @@ const TYPES = {
   },
   BB: { // respect + spontaneous
     key:'BB', emoji:'😎',
+    img:'images/roommate.png',
     name:'룸메이트형 집사', sub:'쿨내 진동, 자유로운 공존 스타일',
     desc:'과한 계획도, 과한 스킨십도 없어요. "각자의 삶을 존중한다"는 마인드로 필요한 순간에만 자연스럽게 케어하는, 고양이와 진짜 룸메이트처럼 지내는 타입입니다.',
     traits:['사료는 배고파 보일 때 그때그때 챙겨주는 편','고양이가 하루 종일 어디 있는지 몰라도 크게 신경 쓰지 않음','병원은 정말 이상이 있을 때만 가는 편'],
@@ -584,7 +605,7 @@ function showResult(){
   const key = axisA + axisB;
   const t = TYPES[key];
 
-  document.getElementById('idEmoji').textContent = t.emoji;
+  document.getElementById('idEmoji').src = t.img;
   document.getElementById('idType').textContent = t.name;
   document.getElementById('idSub').textContent = t.sub;
   document.getElementById('idDesc').textContent = t.desc;
@@ -660,7 +681,17 @@ function wrapText(cx, text, x, y, maxWidth, lineHeight, maxLines){
   return cy;
 }
 
-function buildShareCard(){
+function loadImageForCanvas(url){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=> resolve(img);
+    img.onerror = ()=> reject(new Error('image load failed'));
+    img.src = url;
+  });
+}
+
+async function buildShareCard(){
   const t = window._lastResult;
   const c = document.createElement('canvas');
   c.width = 600; c.height = 780;
@@ -690,6 +721,7 @@ function buildShareCard(){
   cx.fillText('No. ' + window._lastIdNo, 540, 72);
 
   cx.textAlign = 'center';
+  cx.save();
   cx.beginPath();
   cx.arc(300,190,58,0,Math.PI*2);
   cx.fillStyle = '#FFF3DC';
@@ -697,10 +729,22 @@ function buildShareCard(){
   cx.lineWidth = 3;
   cx.strokeStyle = '#C98A2C';
   cx.stroke();
-  cx.font = '56px sans-serif';
-  cx.textBaseline = 'middle';
-  cx.fillText(t.emoji, 300, 194);
-  cx.textBaseline = 'alphabetic';
+  cx.clip();
+  try{
+    const img = await loadImageForCanvas(t.img);
+    cx.drawImage(img, 300-58, 190-58, 116, 116);
+  }catch(e){
+    cx.font = '56px sans-serif';
+    cx.textBaseline = 'middle';
+    cx.fillText(t.emoji, 300, 194);
+    cx.textBaseline = 'alphabetic';
+  }
+  cx.restore();
+  cx.lineWidth = 3;
+  cx.strokeStyle = '#C98A2C';
+  cx.beginPath();
+  cx.arc(300,190,58,0,Math.PI*2);
+  cx.stroke();
 
   cx.fillStyle = '#2E2A24';
   cx.font = 'bold 38px sans-serif';
@@ -728,14 +772,18 @@ function buildShareCard(){
   return c;
 }
 
-function renderShareCanvas(){
-  window._shareCanvas = buildShareCard();
-  document.getElementById('share-preview-thumb').src = window._shareCanvas.toDataURL('image/png');
+async function renderShareCanvas(){
+  window._shareCanvas = await buildShareCard();
+  try{
+    document.getElementById('share-preview-thumb').src = window._shareCanvas.toDataURL('image/png');
+  }catch(e){
+    document.getElementById('share-preview-thumb').src = window._lastResult.img;
+  }
   document.getElementById('share-preview-title').textContent = window._lastResult.name;
 }
 
-function openShareSheet(){
-  renderShareCanvas();
+async function openShareSheet(){
+  await renderShareCanvas();
   document.getElementById('share-overlay').classList.add('show');
 }
 function closeShareSheet(){
@@ -754,12 +802,16 @@ function showToast2(msg){
   showToast2._timer = setTimeout(()=> el.classList.remove('show'), 2000);
 }
 
-function downloadShareImage(){
-  if(!window._shareCanvas) renderShareCanvas();
-  const a = document.createElement('a');
-  a.download = 'cat-owner-test-result.png';
-  a.href = window._shareCanvas.toDataURL('image/png');
-  a.click();
+async function downloadShareImage(){
+  if(!window._shareCanvas) await renderShareCanvas();
+  try{
+    const a = document.createElement('a');
+    a.download = 'cat-owner-test-result.png';
+    a.href = window._shareCanvas.toDataURL('image/png');
+    a.click();
+  }catch(e){
+    showToast2('이미지 저장에 문제가 있어요. 화면 캡처로 저장해보세요!');
+  }
 }
 
 function copyResultText(){
@@ -770,38 +822,42 @@ function copyResultText(){
   });
 }
 
-function shareKakao(){
+async function shareKakao(){
   if(!window.Kakao || !window.Kakao.isInitialized()){
     showToast2('카카오톡 공유는 아직 준비 중이에요.');
     return;
   }
-  if(!window._shareCanvas) renderShareCanvas();
+  if(!window._shareCanvas) await renderShareCanvas();
   const pageUrl = window.location.href;
-  window._shareCanvas.toBlob(blob=>{
-    const file = new File([blob], 'cat-owner-test-result.png', {type:'image/png'});
-    window.Kakao.Share.uploadImage({ file: [file] })
-      .then(res=>{
-        const imageUrl = res.infos.original.url;
-        window.Kakao.Share.sendDefault({
-          objectType: 'feed',
-          content: {
-            title: '나는 어떤 집사일까?',
-            description: `나의 유형: ${window._lastResult.name}`,
-            imageUrl: imageUrl,
-            imageWidth: 600,
-            imageHeight: 780,
-            link: { mobileWebUrl: pageUrl, webUrl: pageUrl }
-          },
-          buttons: [
-            { title: '나도 테스트 하기', link: { mobileWebUrl: pageUrl, webUrl: pageUrl } }
-          ]
+  try{
+    window._shareCanvas.toBlob(blob=>{
+      const file = new File([blob], 'cat-owner-test-result.png', {type:'image/png'});
+      window.Kakao.Share.uploadImage({ file: [file] })
+        .then(res=>{
+          const imageUrl = res.infos.original.url;
+          window.Kakao.Share.sendDefault({
+            objectType: 'feed',
+            content: {
+              title: '나는 어떤 집사일까?',
+              description: `나의 유형: ${window._lastResult.name}`,
+              imageUrl: imageUrl,
+              imageWidth: 600,
+              imageHeight: 780,
+              link: { mobileWebUrl: pageUrl, webUrl: pageUrl }
+            },
+            buttons: [
+              { title: '나도 테스트 하기', link: { mobileWebUrl: pageUrl, webUrl: pageUrl } }
+            ]
+          });
+        })
+        .catch(err=>{
+          console.error('kakao share error:', err && err.message);
+          showToast2('카카오톡 공유 중 문제가 생겼어요.');
         });
-      })
-      .catch(err=>{
-        console.error('kakao share error:', err && err.message);
-        showToast2('카카오톡 공유 중 문제가 생겼어요.');
-      });
-  });
+    });
+  }catch(e){
+    showToast2('카카오톡 공유 중 문제가 생겼어요.');
+  }
 }
 
 function shareTwitter(){
@@ -814,19 +870,19 @@ function shareThreads(){
   window.open(url, '_blank');
 }
 
-function shareViaImageApp(appName){
-  downloadShareImage();
+async function shareViaImageApp(appName){
+  await downloadShareImage();
   showToast2(`이미지가 저장됐어요! ${appName}에 직접 업로드해보세요`);
 }
 
 document.querySelectorAll('.share-icon-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
+  btn.addEventListener('click', async ()=>{
     const action = btn.dataset.action;
-    if(action==='kakao') shareKakao();
+    if(action==='kakao') await shareKakao();
     else if(action==='twitter') shareTwitter();
-    else if(action==='instagram') shareViaImageApp('인스타그램');
+    else if(action==='instagram') await shareViaImageApp('인스타그램');
     else if(action==='threads') shareThreads();
-    else if(action==='save'){ downloadShareImage(); showToast2('이미지가 저장됐어요!'); }
+    else if(action==='save'){ await downloadShareImage(); showToast2('이미지가 저장됐어요!'); }
     else if(action==='copytext') copyResultText();
   });
 });
