@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나는 어떤 집사일까? 고양이 집사 유형 테스트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFE6D8;
+    --card:#FFFBF2;
+    --ink:#2E2A24;
+    --ink-soft:#5B5347;
+    --mustard:#C98A2C;
+    --mustard-deep:#A8701D;
+    --pine:#2F4F42;
+    --line:#D9CBB0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(46,42,36,0.06) 1px, transparent 0);
+    background-size:22px 22px;
+    color:var(--ink);
+    font-family:'Noto Sans KR', sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:28px 14px 60px;
+  }
+  .app{
+    width:100%;
+    max-width:460px;
+  }
+  .masthead{
+    text-align:center;
+    margin-bottom:22px;
+  }
+  .masthead .kicker{
+    font-size:13px;
+    letter-spacing:2px;
+    color:var(--mustard-deep);
+    font-weight:700;
+    text-transform:uppercase;
+  }
+  .masthead h1{
+    font-family:'Gaegu', sans-serif;
+    font-size:32px;
+    line-height:1.3;
+    margin:6px 0 4px;
+    font-weight:700;
+  }
+  .masthead p{
+    font-size:14px;
+    color:var(--ink-soft);
+    margin:0;
+  }
+
+  /* paw progress */
+  .paw-track{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin:22px 0 18px;
+  }
+  .paw{
+    width:22px;height:22px;
+    opacity:0.28;
+    transition:opacity .35s ease, transform .35s ease;
+  }
+  .paw.done{ opacity:1; transform:scale(1.08); }
+  .paw svg{width:100%;height:100%;display:block;}
+  .paw.done svg path{ fill:var(--ink); }
+  .paw svg path{ fill:var(--ink-soft); }
+
+  .card{
+    background:var(--card);
+    border:1.5px solid var(--line);
+    border-radius:18px;
+    padding:26px 22px 24px;
+    box-shadow:0 3px 0 var(--line);
+    position:relative;
+  }
+  .qnum{
+    font-family:'Gaegu', sans-serif;
+    font-size:15px;
+    color:var(--mustard-deep);
+    font-weight:700;
+    margin-bottom:8px;
+  }
+  .qtext{
+    font-size:18px;
+    font-weight:700;
+    line-height:1.55;
+    margin-bottom:20px;
+  }
+  .choices{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .choice{
+    text-align:left;
+    padding:15px 16px;
+    border-radius:12px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    font-size:15px;
+    line-height:1.5;
+    color:var(--ink);
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .choice:hover{
+    border-color:var(--mustard);
+    background:#FFF7E8;
+  }
+  .choice:active{ transform:scale(0.98); }
+  .choice-letter{
+    display:inline-block;
+    font-weight:900;
+    color:var(--mustard-deep);
+    margin-right:8px;
+  }
+
+  .backbtn{
+    display:block;
+    margin:16px auto 0;
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-size:13px;
+    text-decoration:underline;
+    cursor:pointer;
+  }
+
+  /* intro */
+  .intro-body{
+    font-size:14px;
+    line-height:1.7;
+    color:var(--ink-soft);
+    margin-bottom:20px;
+  }
+  .start-btn{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:12px;
+    background:var(--pine);
+    color:#fff;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:'Gaegu', sans-serif;
+  }
+  .start-btn:hover{ background:#25392F; }
+
+  /* result: ID card */
+  .id-wrap{ display:none; }
+  .id-card{
+    background:var(--card);
+    border:2px dashed var(--mustard-deep);
+    border-radius:20px;
+    padding:0;
+    overflow:hidden;
+  }
+  .id-top{
+    background:var(--pine);
+    color:#fff;
+    padding:12px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:'Gaegu', sans-serif;
+    font-size:14px;
+    letter-spacing:1px;
+  }
+  .id-body{ padding:22px; }
+  .id-emoji{
+    width:78px;height:78px;
+    border-radius:50%;
+    background:#FFF3DC;
+    border:2px solid var(--mustard);
+    display:flex;align-items:center;justify-content:center;
+    font-size:38px;
+    margin:0 auto 14px;
+  }
+  .id-type{
+    text-align:center;
+    font-family:'Gaegu', sans-serif;
+    font-size:26px;
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .id-sub{
+    text-align:center;
+    font-size:13px;
+    color:var(--mustard-deep);
+    font-weight:700;
+    margin-bottom:16px;
+  }
+  .id-desc{
+    font-size:14.5px;
+    line-height:1.75;
+    color:var(--ink);
+    margin-bottom:18px;
+    padding-bottom:18px;
+    border-bottom:1px dashed var(--line);
+  }
+  .id-section-label{
+    font-size:12px;
+    font-weight:900;
+    color:var(--pine);
+    letter-spacing:1px;
+    margin-bottom:8px;
+  }
+  .id-traits{
+    list-style:none;
+    padding:0; margin:0 0 18px;
+  }
+  .id-traits li{
+    font-size:14px;
+    line-height:1.6;
+    padding-left:18px;
+    position:relative;
+    margin-bottom:6px;
+  }
+  .id-traits li::before{
+    content:"🐾";
+    position:absolute; left:0; top:0;
+    font-size:11px;
+  }
+  .id-match{
+    background:#FFF3DC;
+    border-radius:12px;
+    padding:14px 16px;
+    font-size:13.5px;
+    line-height:1.65;
+    color:var(--ink);
+  }
+  .id-match b{ color:var(--mustard-deep); }
+  .id-axis{
+    display:flex;
+    gap:8px;
+    margin-top:16px;
+  }
+  .id-axis-chip{
+    flex:1;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:8px 10px;
+    text-align:center;
+    font-size:11.5px;
+    color:var(--ink-soft);
+  }
+  .id-axis-chip b{
+    display:block;
+    font-size:13.5px;
+    color:var(--ink);
+    margin-top:2px;
+  }
+
+  .result-actions{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+  }
+  .btn-outline, .btn-solid{
+    flex:1;
+    padding:13px;
+    border-radius:12px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    text-align:center;
+  }
+  .btn-outline{
+    background:#fff;
+    border:1.5px solid var(--ink);
+    color:var(--ink);
+  }
+  .btn-solid{
+    background:var(--mustard-deep);
+    border:none;
+    color:#fff;
+  }
+  .toast{
+    text-align:center;
+    font-size:12.5px;
+    color:var(--pine);
+    margin-top:10px;
+    height:16px;
+  }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  /* ---------- SHARE BOTTOM SHEET ---------- */
+  .share-overlay{
+    position:fixed; inset:0; z-index:200; background:rgba(46,42,36,0.55);
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .share-overlay.show{ display:flex; }
+  .share-sheet{
+    width:100%; max-width:480px; background:var(--card);
+    border-radius:22px 22px 0 0; padding:18px 20px 28px;
+    animation:sheetUp .22s ease;
+  }
+  @keyframes sheetUp{ from{transform:translateY(24px); opacity:0;} to{transform:translateY(0); opacity:1;} }
+  .share-sheet-header{
+    display:flex; align-items:center; justify-content:space-between;
+    font-family:'Gaegu', sans-serif; font-size:19px; font-weight:700;
+    color:var(--ink); margin-bottom:16px;
+  }
+  .share-sheet-header button{
+    background:none; border:none; color:var(--ink-soft); font-size:17px; cursor:pointer; padding:4px 8px;
+  }
+  .share-preview-row{
+    display:flex; align-items:center; gap:12px;
+    background:#FFF3DC; border:1px solid var(--line); border-radius:14px;
+    padding:10px; margin-bottom:20px;
+  }
+  #share-preview-thumb{ width:56px; height:70px; object-fit:cover; border-radius:8px; background:#fff; }
+  .share-preview-title{ font-weight:700; color:var(--ink); font-size:14px; }
+  .share-preview-sub{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+  .share-icon-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px 8px; }
+  .share-icon-btn{
+    background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:7px;
+    color:var(--ink-soft); font-size:12.5px; font-weight:600; cursor:pointer;
+  }
+  .icon-circle{
+    width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:22px;
+  }
+  .icon-kakao{ background:#FEE500; color:#3C1E1E; }
+  .icon-instagram{ background:linear-gradient(135deg,#4f5bd5,#962fbf,#d62976,#fa7e1e,#feda75); }
+  .icon-threads{ background:#111; color:#fff; }
+  .icon-twitter{ background:#000; color:#fff; }
+  .icon-save{ background:#EFE6D8; color:var(--ink); border:1px solid var(--line); }
+  .icon-copytext{ background:#EFE6D8; color:var(--ink); border:1px solid var(--line); }
+
+  .toast2{
+    position:fixed; left:50%; bottom:40px; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:var(--card); font-weight:600; font-size:13.5px;
+    padding:12px 20px; border-radius:12px; opacity:0; pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease; z-index:300;
+  }
+  .toast2.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="masthead">
+    <div class="kicker">냥냥이 심리테스트</div>
+    <h1>나는 어떤 집사일까?</h1>
+    <p>질문 10개로 알아보는 나의 진짜 집사 유형</p>
+  </div>
+
+  <div class="paw-track" id="pawTrack"></div>
+
+  <!-- INTRO -->
+  <div class="screen active" id="screen-intro">
+    <div class="card">
+      <p class="intro-body">
+        고양이한테 애정표현을 얼마나 적극적으로 하는지, 그리고 얼마나 계획적으로 케어하는지에 따라 집사도 4가지 유형으로 나뉜다는 거 알고 있었나요?<br><br>
+        10개의 질문에 솔직하게 답하면 당신의 진짜 집사 유형과, 잘 맞는 고양이 성향까지 알려드릴게요.
+      </p>
+      <button class="start-btn" onclick="startQuiz()">테스트 시작하기 🐱</button>
+    </div>
+  </div>
+
+  <!-- QUESTION -->
+  <div class="screen" id="screen-quiz">
+    <div class="card">
+      <div class="qnum" id="qnum"></div>
+      <div class="qtext" id="qtext"></div>
+      <div class="choices" id="choices"></div>
+    </div>
+    <button class="backbtn" id="backBtn" onclick="goBack()">← 이전 질문으로</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="id-card">
+      <div class="id-top">
+        <span>CAT OWNER ID</span>
+        <span id="idNo">No. 0000</span>
+      </div>
+      <div class="id-body">
+        <div class="id-emoji" id="idEmoji">🐾</div>
+        <div class="id-type" id="idType">-</div>
+        <div class="id-sub" id="idSub">-</div>
+        <div class="id-desc" id="idDesc">-</div>
+
+        <div class="id-section-label">특징</div>
+        <ul class="id-traits" id="idTraits"></ul>
+
+        <div class="id-section-label">잘 맞는 고양이 성향</div>
+        <div class="id-match" id="idMatch"></div>
+
+        <div class="id-axis" id="idAxis"></div>
+      </div>
+    </div>
+    <div class="result-actions">
+      <button class="btn-outline" onclick="restart()">다시 하기</button>
+      <button class="btn-solid" onclick="openShareSheet()">📤 결과 공유하기</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="share-overlay" id="share-overlay">
+  <div class="share-sheet">
+    <div class="share-sheet-header">
+      <span>결과 공유하기</span>
+      <button id="share-sheet-close" aria-label="닫기">✕</button>
+    </div>
+    <div class="share-preview-row">
+      <img id="share-preview-thumb" alt="결과 미리보기"/>
+      <div>
+        <div class="share-preview-title" id="share-preview-title">-</div>
+        <div class="share-preview-sub">나는 어떤 집사일까? 테스트</div>
+      </div>
+    </div>
+    <div class="share-icon-row">
+      <button class="share-icon-btn" data-action="kakao">
+        <span class="icon-circle icon-kakao">💬</span><span>카카오톡</span>
+      </button>
+      <button class="share-icon-btn" data-action="instagram">
+        <span class="icon-circle icon-instagram">📷</span><span>인스타그램</span>
+      </button>
+      <button class="share-icon-btn" data-action="threads">
+        <span class="icon-circle icon-threads">@</span><span>Threads</span>
+      </button>
+      <button class="share-icon-btn" data-action="twitter">
+        <span class="icon-circle icon-twitter">𝕏</span><span>트위터(X)</span>
+      </button>
+      <button class="share-icon-btn" data-action="save">
+        <span class="icon-circle icon-save">🖼</span><span>이미지 저장</span>
+      </button>
+      <button class="share-icon-btn" data-action="copytext">
+        <span class="icon-circle icon-copytext">📋</span><span>텍스트 복사</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast2" id="toast2"></div>
+
+<script>
+const PAW_SVG = '<svg viewBox="0 0 100 100"><path d="M50 55c-14 0-26 12-26 26 0 8 6 14 14 14 6 0 9-3 12-3s6 3 12 3c8 0 14-6 14-14 0-14-12-26-26-26z M22 40c-7 0-13 6-13 14s6 13 13 13 13-6 13-13-6-14-13-14z M78 40c7 0 13 6 13 14s-6 13-13 13-13-6-13-13 6-14 13-14z M38 15c-7 0-12 7-12 15s5 15 12 15 12-7 12-15-5-15-12-15z M62 15c7 0 12 7 12 15s-5 15-12 15-12-7-12-15 5-15 12-15z"/></svg>';
+
+const questions = [
+  // axis A: skinship(A) vs respect(B) -- 5 questions
+  {axis:'A', text:'고양이가 낮잠을 자고 있을 때, 나는?',
+   a:'살금살금 다가가서 살짝 쓰다듬어 본다', b:'방해하지 않고 자는 모습만 지켜본다'},
+  {axis:'A', text:'고양이가 한동안 무릎에 안 올라올 때 나는?',
+   a:'먼저 다가가서 살짝 안아본다', b:'언젠가 오겠지 하고 기다린다'},
+  {axis:'A', text:'퇴근하고 집에 들어오면 가장 먼저 하는 행동은?',
+   a:'고양이부터 부르며 반갑게 인사하고 만진다', b:'옷 갈아입고 씻은 후 자연스럽게 마주친다'},
+  {axis:'A', text:'SNS에 고양이 사진·영상을 올리는 빈도는?',
+   a:'거의 매일, 모든 순간을 기록하는 편', b:'특별한 순간에만 가끔 올리는 편'},
+  {axis:'A', text:'고양이가 다른 방으로 슬쩍 넘어갈 때 나는?',
+   a:'따라가서 뭐 하나 궁금해서 구경한다', b:'혼자만의 시간을 갖게 그냥 둔다'},
+  // axis B: planned(A) vs spontaneous(B) -- 5 questions
+  {axis:'B', text:'사료·간식 급여 방식은?',
+   a:'정해진 시간, 정해진 양을 철저히 지킨다', b:'배고파 보이면 그때그때 챙겨준다'},
+  {axis:'B', text:'병원 정기검진은 보통?',
+   a:'캘린더에 등록해두고 미리 예약해둔다', b:'눈에 띄게 컨디션이 안 좋을 때 간다'},
+  {axis:'B', text:'새 장난감이나 용품을 살 때는?',
+   a:'후기와 소재·성분을 꼼꼼히 비교한 후 산다', b:'예쁘거나 재밌어 보이면 바로 산다'},
+  {axis:'B', text:'집사로서 나의 케어 계획은?',
+   a:'나이대별 건강관리, 예방접종 스케줄까지 세워둔 편', b:'그때그때 필요한 걸 챙기는 편'},
+  {axis:'B', text:'여행을 갈 때 고양이 케어는 보통?',
+   a:'몇 주 전부터 펫시터·호텔을 예약하고 매뉴얼도 써둔다', b:'날짜가 임박해서 급하게 알아본다'},
+];
+
+const TYPES = {
+  AA: { // skinship + planned
+    key:'AA', emoji:'🧑‍✈️',
+    name:'매니저형 집사', sub:'애정도 계획도 완벽한 올코치 스타일',
+    desc:'애정 표현에 거리낌이 없으면서 동시에 계획성까지 갖춘, 말 그대로 완벽주의 집사예요. 고양이의 모든 순간을 함께하고 싶어 하면서도 건강 관리와 스케줄, 용품 선택까지 하나하나 철저하게 챙기는 타입입니다.',
+    traits:['예방접종·정기검진 일정이 이미 캘린더 앱에 등록되어 있음','고양이가 부르지 않아도 먼저 다가가 스킨십을 건다','새 간식 하나 살 때도 성분표부터 정독한다'],
+    match:'애정 표현이 확실하고 예측 가능한 루틴을 좋아하는 성향(코리안숏헤어, 랙돌 등 사람을 잘 따르는 품종)과 특히 잘 맞아요.'
+  },
+  AB: { // skinship + spontaneous
+    key:'AB', emoji:'🥰',
+    name:'껌딱지형 집사', sub:'감정 충만, 마음 가는 대로 챙기는 스타일',
+    desc:'계획보다는 마음이 먼저 움직이는 타입이에요. 고양이와 붙어 있는 시간 자체가 힐링이라 매일이 즉흥 이벤트고, 정해진 루틴보다는 그 순간 고양이가 원하는 걸 바로 해주는 걸 좋아해요.',
+    traits:['핸드폰 사진첩 대부분이 고양이 사진','"오늘 아침 즉흥으로 캣타워 배송 완료" 같은 일이 자주 있음','병원은 컨디션을 보고 감으로 판단하는 편'],
+    match:'감정 표현이 풍부하고 애교 많은 활발한 성향(뱅갈, 아비시니안 등)과 케미가 잘 맞아요.'
+  },
+  BA: { // respect + planned
+    key:'BA', emoji:'🧐',
+    name:'합리형 집사', sub:'쿨해 보이지만 뒤에서는 완벽한 스타일',
+    desc:'애정 표현은 절제하는 편이지만, 필요한 케어는 누구보다 철저해요. "고양이도 사생활이 있다"는 주의라 거리를 두지만, 보이지 않는 곳에서 이미 다 계획되어 있는 타입입니다.',
+    traits:['스킨십보다 안전하고 편안한 환경을 세팅하는 데 진심','여행 갈 때 펫시터용 케어 매뉴얼을 따로 작성해둠','고양이가 먼저 다가올 때까지 여유 있게 기다리는 편'],
+    match:'독립적이고 조용한 걸 좋아하는 성향(러시안블루, 브리티시숏헤어 등)과 평화로운 동거가 가능해요.'
+  },
+  BB: { // respect + spontaneous
+    key:'BB', emoji:'😎',
+    name:'룸메이트형 집사', sub:'쿨내 진동, 자유로운 공존 스타일',
+    desc:'과한 계획도, 과한 스킨십도 없어요. "각자의 삶을 존중한다"는 마인드로 필요한 순간에만 자연스럽게 케어하는, 고양이와 진짜 룸메이트처럼 지내는 타입입니다.',
+    traits:['사료는 배고파 보일 때 그때그때 챙겨주는 편','고양이가 하루 종일 어디 있는지 몰라도 크게 신경 쓰지 않음','병원은 정말 이상이 있을 때만 가는 편'],
+    match:'독립심이 강하고 혼자만의 시간을 즐기는 성향(코리안숏헤어, 샴 등)과 자유로운 공존이 가능해요.'
+  }
+};
+
+let current = 0;
+let answers = []; // {axis, value: 'a'|'b'}
+
+function renderPaws(){
+  const track = document.getElementById('pawTrack');
+  track.innerHTML = '';
+  for(let i=0;i<questions.length;i++){
+    const d = document.createElement('div');
+    d.className = 'paw' + (i < answers.length ? ' done' : '');
+    d.innerHTML = PAW_SVG;
+    track.appendChild(d);
+  }
+}
+renderPaws();
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz(){
+  current = 0; answers = [];
+  showScreen('screen-quiz');
+  renderQuestion();
+  renderPaws();
+}
+
+function renderQuestion(){
+  const q = questions[current];
+  document.getElementById('qnum').textContent = `Q${current+1}. / ${questions.length}`;
+  document.getElementById('qtext').textContent = q.text;
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  ['a','b'].forEach(letter=>{
+    const btn = document.createElement('button');
+    btn.className = 'choice';
+    btn.innerHTML = `<span class="choice-letter">${letter.toUpperCase()}</span>${q[letter]}`;
+    btn.onclick = () => selectAnswer(letter);
+    choicesEl.appendChild(btn);
+  });
+  document.getElementById('backBtn').style.visibility = current === 0 ? 'hidden' : 'visible';
+}
+
+function selectAnswer(letter){
+  answers[current] = { axis: questions[current].axis, value: letter };
+  renderPaws();
+  if(current < questions.length - 1){
+    current++;
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function goBack(){
+  if(current === 0) return;
+  current--;
+  answers = answers.slice(0, current);
+  renderPaws();
+  renderQuestion();
+}
+
+function showResult(){
+  let aCountA=0, aCountB=0, bCountA=0, bCountB=0;
+  answers.forEach(ans=>{
+    if(ans.axis==='A'){ ans.value==='a' ? aCountA++ : aCountB++; }
+    else { ans.value==='a' ? bCountA++ : bCountB++; }
+  });
+  const axisA = aCountA >= aCountB ? 'A' : 'B'; // A=스킨십, B=존중
+  const axisB = bCountA >= bCountB ? 'A' : 'B'; // A=계획적, B=즉흥적
+  const key = axisA + axisB;
+  const t = TYPES[key];
+
+  document.getElementById('idEmoji').textContent = t.emoji;
+  document.getElementById('idType').textContent = t.name;
+  document.getElementById('idSub').textContent = t.sub;
+  document.getElementById('idDesc').textContent = t.desc;
+
+
+  const traitsEl = document.getElementById('idTraits');
+  traitsEl.innerHTML = '';
+  t.traits.forEach(tr=>{
+    const li = document.createElement('li');
+    li.textContent = tr;
+    traitsEl.appendChild(li);
+  });
+  document.getElementById('idMatch').innerHTML = t.match;
+
+  const axisEl = document.getElementById('idAxis');
+  axisEl.innerHTML = `
+    <div class="id-axis-chip">애착 표현<b>${axisA==='A' ? '스킨십 적극형' : '거리 존중형'}</b></div>
+    <div class="id-axis-chip">돌봄 스타일<b>${axisB==='A' ? '계획적/철저형' : '즉흥적/반응형'}</b></div>
+  `;
+
+  const idNo = key + '-' + String(Math.floor(Math.random()*900+100));
+  document.getElementById('idNo').textContent = 'No. ' + idNo;
+
+  window._lastResult = t;
+  window._lastIdNo = idNo;
+  window._shareCanvas = null;
+  showScreen('screen-result');
+}
+
+function restart(){
+  showScreen('screen-intro');
+}
+
+/* ---------- SHARE SHEET ---------- */
+
+function shareText(){
+  const t = window._lastResult;
+  if(!t) return '';
+  return `[나는 어떤 집사일까?]\n나의 유형: ${t.name} (${t.sub})\n\n${t.desc}\n\n👉 냥냥이에서 나도 테스트 해보기: ${window.location.href}`;
+}
+
+function roundRectPath(cx,x,y,w,h,r){
+  cx.beginPath();
+  cx.moveTo(x+r,y);
+  cx.arcTo(x+w,y,x+w,y+h,r);
+  cx.arcTo(x+w,y+h,x,y+h,r);
+  cx.arcTo(x,y+h,x,y,r);
+  cx.arcTo(x,y,x+w,y,r);
+  cx.closePath();
+}
+
+function wrapText(cx, text, x, y, maxWidth, lineHeight, maxLines){
+  const words = text.split('');
+  let line = '';
+  let lines = 0;
+  let cy = y;
+  for(let i=0;i<words.length;i++){
+    const test = line + words[i];
+    if(cx.measureText(test).width > maxWidth && line !== ''){
+      cx.fillText(line, x, cy);
+      line = words[i];
+      cy += lineHeight;
+      lines++;
+      if(maxLines && lines >= maxLines){
+        cx.fillText(line.trim() + '…', x, cy);
+        return cy;
+      }
+    } else {
+      line = test;
+    }
+  }
+  cx.fillText(line, x, cy);
+  return cy;
+}
+
+function buildShareCard(){
+  const t = window._lastResult;
+  const c = document.createElement('canvas');
+  c.width = 600; c.height = 780;
+  const cx = c.getContext('2d');
+
+  cx.fillStyle = '#EFE6D8';
+  cx.fillRect(0,0,600,780);
+
+  roundRectPath(cx, 36,36,528,708,22);
+  cx.fillStyle = '#FFFBF2';
+  cx.fill();
+  cx.setLineDash([9,7]);
+  cx.lineWidth = 3;
+  cx.strokeStyle = '#A8701D';
+  cx.stroke();
+  cx.setLineDash([]);
+
+  roundRectPath(cx, 36,36,528,58,22);
+  cx.fillStyle = '#2F4F42';
+  cx.fill();
+  cx.fillRect(36,58,528,36);
+  cx.fillStyle = '#fff';
+  cx.font = 'bold 20px sans-serif';
+  cx.textAlign = 'left';
+  cx.fillText('CAT OWNER ID', 60, 72);
+  cx.textAlign = 'right';
+  cx.fillText('No. ' + window._lastIdNo, 540, 72);
+
+  cx.textAlign = 'center';
+  cx.beginPath();
+  cx.arc(300,190,58,0,Math.PI*2);
+  cx.fillStyle = '#FFF3DC';
+  cx.fill();
+  cx.lineWidth = 3;
+  cx.strokeStyle = '#C98A2C';
+  cx.stroke();
+  cx.font = '56px sans-serif';
+  cx.textBaseline = 'middle';
+  cx.fillText(t.emoji, 300, 194);
+  cx.textBaseline = 'alphabetic';
+
+  cx.fillStyle = '#2E2A24';
+  cx.font = 'bold 38px sans-serif';
+  cx.fillText(t.name, 300, 300);
+
+  cx.fillStyle = '#A8701D';
+  cx.font = 'bold 19px sans-serif';
+  cx.fillText(t.sub, 300, 332);
+
+  cx.strokeStyle = '#D9CBB0';
+  cx.lineWidth = 1;
+  cx.beginPath();
+  cx.moveTo(70,352); cx.lineTo(530,352); cx.stroke();
+
+  cx.fillStyle = '#2E2A24';
+  cx.font = '19px sans-serif';
+  cx.textAlign = 'left';
+  wrapText(cx, t.desc, 70, 388, 460, 29, 5);
+
+  cx.textAlign = 'center';
+  cx.fillStyle = '#5B5347';
+  cx.font = '16px sans-serif';
+  cx.fillText('냥냥이 · 나는 어떤 집사일까? 테스트', 300, 715);
+
+  return c;
+}
+
+function renderShareCanvas(){
+  window._shareCanvas = buildShareCard();
+  document.getElementById('share-preview-thumb').src = window._shareCanvas.toDataURL('image/png');
+  document.getElementById('share-preview-title').textContent = window._lastResult.name;
+}
+
+function openShareSheet(){
+  renderShareCanvas();
+  document.getElementById('share-overlay').classList.add('show');
+}
+function closeShareSheet(){
+  document.getElementById('share-overlay').classList.remove('show');
+}
+document.getElementById('share-overlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'share-overlay') closeShareSheet();
+});
+document.getElementById('share-sheet-close').addEventListener('click', closeShareSheet);
+
+function showToast2(msg){
+  const el = document.getElementById('toast2');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(showToast2._timer);
+  showToast2._timer = setTimeout(()=> el.classList.remove('show'), 2000);
+}
+
+function downloadShareImage(){
+  if(!window._shareCanvas) renderShareCanvas();
+  const a = document.createElement('a');
+  a.download = 'cat-owner-test-result.png';
+  a.href = window._shareCanvas.toDataURL('image/png');
+  a.click();
+}
+
+function copyResultText(){
+  navigator.clipboard.writeText(shareText()).then(()=>{
+    showToast2('결과 텍스트가 복사됐어요!');
+  }).catch(()=>{
+    showToast2('복사에 실패했어요.');
+  });
+}
+
+function shareKakao(){
+  if(!window.Kakao || !window.Kakao.isInitialized()){
+    showToast2('카카오톡 공유는 아직 준비 중이에요.');
+    return;
+  }
+  if(!window._shareCanvas) renderShareCanvas();
+  const pageUrl = window.location.href;
+  window._shareCanvas.toBlob(blob=>{
+    const file = new File([blob], 'cat-owner-test-result.png', {type:'image/png'});
+    window.Kakao.Share.uploadImage({ file: [file] })
+      .then(res=>{
+        const imageUrl = res.infos.original.url;
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: '나는 어떤 집사일까?',
+            description: `나의 유형: ${window._lastResult.name}`,
+            imageUrl: imageUrl,
+            imageWidth: 600,
+            imageHeight: 780,
+            link: { mobileWebUrl: pageUrl, webUrl: pageUrl }
+          },
+          buttons: [
+            { title: '나도 테스트 하기', link: { mobileWebUrl: pageUrl, webUrl: pageUrl } }
+          ]
+        });
+      })
+      .catch(err=>{
+        console.error('kakao share error:', err && err.message);
+        showToast2('카카오톡 공유 중 문제가 생겼어요.');
+      });
+  });
+}
+
+function shareTwitter(){
+  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText())}`;
+  window.open(url, '_blank');
+}
+
+function shareThreads(){
+  const url = `https://www.threads.net/intent/post?text=${encodeURIComponent(shareText())}`;
+  window.open(url, '_blank');
+}
+
+function shareViaImageApp(appName){
+  downloadShareImage();
+  showToast2(`이미지가 저장됐어요! ${appName}에 직접 업로드해보세요`);
+}
+
+document.querySelectorAll('.share-icon-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const action = btn.dataset.action;
+    if(action==='kakao') shareKakao();
+    else if(action==='twitter') shareTwitter();
+    else if(action==='instagram') shareViaImageApp('인스타그램');
+    else if(action==='threads') shareThreads();
+    else if(action==='save'){ downloadShareImage(); showToast2('이미지가 저장됐어요!'); }
+    else if(action==='copytext') copyResultText();
+  });
+});
+</script>
+</body>
+</html>
