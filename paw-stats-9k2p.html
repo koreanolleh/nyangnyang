@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>냥냥 · 통계</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Pretendard&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#fff4d6; --paper:#ffffff; --ink:#2b2438; --ink-soft:#6b6178;
+    --coral:#ff6b5b; --coral-deep:#e0503f; --mint:#1fb6a8; --line:rgba(43,36,56,0.1);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Pretendard', -apple-system, sans-serif;
+  }
+  .wrap{ max-width:720px; margin:0 auto; padding:48px 20px 80px; }
+  h1{ font-family:'Gaegu', sans-serif; font-size:30px; margin:0 0 24px; }
+  h1 .paw{ color:var(--coral-deep); }
+
+  .gate{
+    max-width:360px; margin:80px auto; background:var(--paper);
+    border:1px solid var(--line); border-radius:20px; padding:32px; text-align:center;
+  }
+  .gate input{
+    width:100%; border:1px solid var(--line); border-radius:12px; padding:11px 14px;
+    font-size:14px; margin:16px 0; background:#fffaf0; color:var(--ink);
+  }
+  .gate button{
+    width:100%; background:var(--coral); color:#fff; border:none; border-radius:12px;
+    padding:12px; font-size:15px; font-weight:700; cursor:pointer;
+  }
+  .gate button:hover{ background:var(--coral-deep); }
+  .gate .err{ color:var(--coral-deep); font-size:13px; margin-top:8px; min-height:18px; }
+
+  #dashboard{ display:none; }
+
+  .stat-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:32px; }
+  .stat-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:16px;
+    padding:18px 14px; text-align:center;
+  }
+  .stat-card .num{ font-size:1.6rem; font-weight:800; color:var(--coral-deep); }
+  .stat-card .label{ font-size:0.78rem; color:var(--ink-soft); margin-top:4px; }
+
+  .panel{
+    background:var(--paper); border:1px solid var(--line); border-radius:20px;
+    padding:24px; margin-bottom:20px;
+  }
+  .panel h2{ font-size:1.05rem; margin:0 0 16px; }
+
+  .chart{ display:flex; align-items:flex-end; gap:6px; height:140px; }
+  .bar-col{ flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .bar{ width:100%; background:var(--mint); border-radius:6px 6px 0 0; min-height:2px; }
+  .bar-label{ font-size:0.65rem; color:var(--ink-soft); }
+
+  .page-row{
+    display:flex; justify-content:space-between; padding:9px 0;
+    border-bottom:1px solid var(--line); font-size:0.88rem;
+  }
+  .page-row:last-child{ border-bottom:none; }
+  .page-row .path{ color:var(--ink); font-weight:600; }
+  .page-row .count{ color:var(--ink-soft); }
+
+  .empty{ text-align:center; color:var(--ink-soft); font-size:0.85rem; padding:20px; }
+
+  @media (max-width:480px){
+    .stat-grid{ grid-template-columns:repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1><span class="paw">🐾</span> 냥냥 통계</h1>
+
+  <div class="gate" id="gate">
+    <p style="margin:0 0 4px; font-weight:700;">비밀번호 확인</p>
+    <input type="password" id="gatePassword" placeholder="비밀번호 입력">
+    <button id="gateBtn">보기</button>
+    <p class="err" id="gateErr"></p>
+  </div>
+
+  <div id="dashboard">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="num" id="totalPv">-</div><div class="label">전체 PV</div></div>
+      <div class="stat-card"><div class="num" id="totalUv">-</div><div class="label">전체 UV</div></div>
+      <div class="stat-card"><div class="num" id="todayPv">-</div><div class="label">오늘 PV</div></div>
+      <div class="stat-card"><div class="num" id="todayUv">-</div><div class="label">오늘 UV</div></div>
+    </div>
+
+    <div class="panel">
+      <h2>최근 14일 추이 (PV)</h2>
+      <div class="chart" id="chart"></div>
+    </div>
+
+    <div class="panel">
+      <h2>인기 페이지</h2>
+      <div id="topPages"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ================================================
+  // 설정: 본인 값으로 채워주세요.
+  // ================================================
+  const STATS_PASSWORD    = "냥냥통계2026";
+  const SUPABASE_URL      = "https://jqgqaityiirpheazmslv.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_DeR9x8Vih8vCIWAeJ4Llfw_MNhpXnHJ";
+  // ================================================
+
+  document.getElementById('gateBtn').addEventListener('click', async ()=>{
+    const input = document.getElementById('gatePassword').value;
+    if(input !== STATS_PASSWORD){
+      document.getElementById('gateErr').textContent = '비밀번호가 틀렸습니다';
+      return;
+    }
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    await loadStats();
+  });
+
+  async function loadStats(){
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data, error } = await sb.rpc('get_site_stats', { days: 14 });
+
+    if(error){
+      document.getElementById('dashboard').innerHTML =
+        `<div class="empty">통계를 불러오지 못했습니다: ${error.message}</div>`;
+      return;
+    }
+
+    document.getElementById('totalPv').textContent = data.total_pv ?? 0;
+    document.getElementById('totalUv').textContent = data.total_uv ?? 0;
+    document.getElementById('todayPv').textContent = data.today_pv ?? 0;
+    document.getElementById('todayUv').textContent = data.today_uv ?? 0;
+
+    const daily = data.daily || [];
+    const chart = document.getElementById('chart');
+    if(daily.length === 0){
+      chart.innerHTML = '<div class="empty">아직 쌓인 데이터가 없어요</div>';
+    }else{
+      const max = Math.max(...daily.map(d => d.pv), 1);
+      chart.innerHTML = daily.map(d => `
+        <div class="bar-col">
+          <div class="bar" style="height:${Math.max(4, (d.pv / max) * 120)}px"></div>
+          <div class="bar-label">${d.day}</div>
+        </div>
+      `).join('');
+    }
+
+    const topPages = data.top_pages || [];
+    const topPagesEl = document.getElementById('topPages');
+    topPagesEl.innerHTML = topPages.length === 0
+      ? '<div class="empty">아직 쌓인 데이터가 없어요</div>'
+      : topPages.map(p => `
+          <div class="page-row">
+            <span class="path">${p.path}</span>
+            <span class="count">${p.pv} PV</span>
+          </div>
+        `).join('');
+  }
+</script>
+</body>
+</html>
