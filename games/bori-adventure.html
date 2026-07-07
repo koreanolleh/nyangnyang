@@ -214,8 +214,8 @@
 (function(){
   // ---------- Leaderboard backend (Supabase) ----------
   // TODO: Supabase 프로젝트의 Project URL과 anon public key로 아래 두 값만 교체하세요.
-  const SUPABASE_URL = "YOUR_SUPABASE_URL";
-  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+  const SUPABASE_URL = "https://jqgqaityiirpheazmslv.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_DeR9x8Vih8vCIWAeJ4Llfw_MNhpXnHJ";
   const sb = (SUPABASE_URL.startsWith("http") && window.supabase)
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     : null;
