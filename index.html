@@ -285,5 +285,28 @@
   냥냥 · 심심할 때 잠깐 놀다 가는 곳
 </footer>
 
+<!-- ===== 방문 통계 추적 (Supabase) ===== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://jqgqaityiirpheazmslv.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_DeR9x8Vih8vCIWAeJ4Llfw_MNhpXnHJ";
+
+  (function trackVisit(){
+    try{
+      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      let vid = localStorage.getItem('nyang_vid');
+      if(!vid){
+        vid = crypto.randomUUID();
+        localStorage.setItem('nyang_vid', vid);
+      }
+      sb.from('page_views').insert({
+        path: location.pathname,
+        visitor_id: vid,
+        referrer: document.referrer || null
+      }).then(()=>{}).catch(()=>{});
+    }catch(e){ /* 통계 실패해도 사이트 이용엔 지장 없도록 조용히 무시 */ }
+  })();
+</script>
+
 </body>
 </html>
