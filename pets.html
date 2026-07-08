@@ -405,6 +405,13 @@
     document.getElementById('lightboxOverlay').classList.remove('open');
   });
 
+  // 배경(빈 화면) 클릭하면 닫기 — 카드 자체를 클릭했을 땐 닫히지 않음
+  document.getElementById('lightboxOverlay').addEventListener('click', (e) => {
+    if(e.target.id === 'lightboxOverlay'){
+      document.getElementById('lightboxOverlay').classList.remove('open');
+    }
+  });
+
   // ===== 관리자 모드 =====
   document.getElementById('adminToggle').addEventListener('click', () => {
     if(isAdmin){
