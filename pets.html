@@ -6,6 +6,8 @@
 <title>멍냥사진관 — 우리 아이 자랑</title>
 <meta name="description" content="우리 집 고양이, 강아지를 자랑해보세요. 냥냥 사진관에서 귀여운 순간을 함께 나눠요.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://jqgqaityiirpheazmslv.supabase.co">
+<link rel="dns-prefetch" href="https://jqgqaityiirpheazmslv.supabase.co">
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -55,6 +57,16 @@
   }
   .tile:hover .tile-caption{ opacity:1; }
   .empty{ text-align:center; padding:60px 20px; color:var(--ink-soft); grid-column:1/-1; }
+
+  .skeleton{
+    aspect-ratio:1/1; background:linear-gradient(90deg, #f3ece0 25%, #ede2d0 37%, #f3ece0 63%);
+    background-size:400% 100%; animation:skeleton-shine 1.4s ease infinite;
+  }
+  @keyframes skeleton-shine{
+    0%{ background-position:100% 50%; }
+    100%{ background-position:0 50%; }
+  }
+  .load-more{ grid-column:1/-1; text-align:center; padding:16px; }
 
   /* 라이트박스 (사진 확대) */
   .lightbox-modal{
@@ -123,7 +135,11 @@
   </div>
 
   <div class="grid" id="grid">
-    <p class="empty">불러오는 중…</p>
+    <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+    <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+  </div>
+  <div class="load-more" id="loadMoreWrap" style="display:none;">
+    <button class="btn ghost" id="loadMoreBtn">사진 더 보기</button>
   </div>
 </div>
 
@@ -251,6 +267,8 @@
   }
 
   let currentPhotos = [];
+  const PAGE_SIZE = 24;
+  let currentOffset = 0;
 
   function tileHtml(p){
     return `
@@ -262,7 +280,12 @@
 
   async function loadGallery(){
     const grid = document.getElementById('grid');
-    const { data, error } = await sb.from('pet_photos_public').select('*');
+    currentOffset = 0;
+    const { data, error } = await sb
+      .from('pet_photos_public')
+      .select('*')
+      .range(0, PAGE_SIZE - 1);
+
     if(error){
       grid.innerHTML = `<p class="empty">불러오지 못했어요: ${error.message}</p>`;
       return;
@@ -270,10 +293,34 @@
     currentPhotos = data || [];
     if(currentPhotos.length === 0){
       grid.innerHTML = `<p class="empty">아직 등록된 사진이 없어요. 첫 번째로 자랑해보세요! 🐾</p>`;
+      document.getElementById('loadMoreWrap').style.display = 'none';
       return;
     }
     grid.innerHTML = currentPhotos.map(tileHtml).join('');
+    currentOffset = currentPhotos.length;
+    document.getElementById('loadMoreWrap').style.display =
+      currentPhotos.length === PAGE_SIZE ? 'block' : 'none';
   }
+
+  document.getElementById('loadMoreBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('loadMoreBtn');
+    btn.disabled = true;
+    btn.textContent = '불러오는 중...';
+    const { data, error } = await sb
+      .from('pet_photos_public')
+      .select('*')
+      .range(currentOffset, currentOffset + PAGE_SIZE - 1);
+
+    if(!error && data && data.length > 0){
+      currentPhotos = currentPhotos.concat(data);
+      document.getElementById('grid').insertAdjacentHTML('beforeend', data.map(tileHtml).join(''));
+      currentOffset += data.length;
+    }
+    document.getElementById('loadMoreWrap').style.display =
+      (data && data.length === PAGE_SIZE) ? 'block' : 'none';
+    btn.disabled = false;
+    btn.textContent = '사진 더 보기';
+  });
 
   // ===== 라이트박스 (사진 확대) =====
   window.openLightbox = function(id){
