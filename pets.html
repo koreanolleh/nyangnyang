@@ -69,32 +69,35 @@
   .load-more{ grid-column:1/-1; text-align:center; padding:16px; }
 
   /* 라이트박스 (사진 확대) */
-  .lightbox-modal{
-    background:var(--paper); border-radius:20px; overflow:hidden; width:100%; max-width:460px;
-    max-height:88vh; display:flex; flex-direction:column; position:relative;
-  }
+  .lightbox-shell{ position:relative; width:100%; max-width:480px; }
   .lb-track{
     display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
-    scrollbar-width:none; padding:0 8%; background:#f3ece0;
+    scrollbar-width:none; padding:0 6%;
   }
   .lb-track::-webkit-scrollbar{ display:none; }
   .lb-slide{
-    flex:0 0 84%; scroll-snap-align:center; margin-right:10px; padding:10px 0;
+    flex:0 0 88%; scroll-snap-align:center; margin-right:12px;
   }
   .lb-slide:last-child{ margin-right:0; }
-  .lb-slide img{
-    width:100%; height:50vh; object-fit:cover; border-radius:14px; display:block; background:#e9dfcd;
+  .lightbox-modal{
+    background:var(--paper); border-radius:20px; overflow:hidden;
+    max-height:80vh; overflow-y:auto;
+  }
+  .lightbox-modal img{
+    width:100%; height:46vh; object-fit:cover; display:block; background:#e9dfcd;
+    pointer-events:none; -webkit-user-drag:none;
   }
   .lb-nav{
-    position:absolute; top:calc(25vh + 10px); transform:translateY(-50%); z-index:5;
+    position:absolute; top:23vh; transform:translateY(-50%); z-index:5;
     background:rgba(20,15,10,0.45); color:#fff; border:none; width:36px; height:36px;
     border-radius:50%; font-size:20px; line-height:1; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
   }
   .lb-nav:hover{ background:rgba(20,15,10,0.65); }
-  .lb-prev{ left:6px; } .lb-next{ right:6px; }
-  .lightbox-body{ padding:20px; }
+  .lb-prev{ left:2px; } .lb-next{ right:2px; }
+  .lightbox-body{ padding:16px 18px 20px; }
   .lightbox-body .photo-name{ font-size:1.15rem; }
+  .lb-close{ width:100%; max-width:480px; margin-top:12px; }
   .photo-name{ font-weight:800; font-size:0.98rem; margin:0 0 2px; }
   .photo-nick{ font-size:0.78rem; color:var(--ink-soft); margin:0 0 8px; }
   .photo-caption{ font-size:0.9rem; color:var(--ink); margin:0 0 14px; word-break:break-word; line-height:1.5; }
@@ -160,19 +163,13 @@
   </div>
 </div>
 
-<!-- 라이트박스: 사진 클릭하면 확대 + 좌우 스와이프 -->
+<!-- 라이트박스: 사진 클릭하면 확대 + 카드 전체 좌우 스와이프 -->
 <div class="overlay" id="lightboxOverlay">
-  <div class="lightbox-modal">
+  <div class="lightbox-shell">
     <button class="lb-nav lb-prev" id="lbPrev" aria-label="이전 사진">‹</button>
     <button class="lb-nav lb-next" id="lbNext" aria-label="다음 사진">›</button>
     <div class="lb-track" id="lbTrack"></div>
-    <div class="lightbox-body">
-      <p class="photo-name" id="lbPetName"></p>
-      <p class="photo-nick" id="lbNick"></p>
-      <p class="photo-caption" id="lbCaption"></p>
-      <div class="photo-actions" id="lbActions"></div>
-      <button class="btn ghost" id="closeLightbox" style="width:100%; margin-top:14px;">닫기</button>
-    </div>
+    <button class="btn ghost lb-close" id="closeLightbox">닫기</button>
   </div>
 </div>
 
@@ -342,21 +339,25 @@
   });
 
   // ===== 라이트박스 (사진 확대 + 좌우 스와이프) =====
-  function slideHtml(p){
-    return `<div class="lb-slide" data-id="${p.id}">
-      <img src="${p.image_url}" alt="${escapeHtml(p.pet_name)}" loading="lazy" decoding="async">
-    </div>`;
+  function actionsHtml(p){
+    return isAdmin
+      ? `<button class="btn danger small" onclick="adminDelete(${p.id})">삭제(관리자)</button>`
+      : `<button class="btn ghost small" onclick="openEditFromLightbox(${p.id}, '${escapeHtml(p.pet_name).replace(/'/g,"\\'")}', '${escapeHtml(p.caption || '').replace(/'/g,"\\'")}')">수정/삭제</button>`;
   }
 
-  function updateLightboxInfo(p){
-    document.getElementById('lbPetName').textContent = p.pet_name;
-    document.getElementById('lbNick').textContent = 'by ' + p.nickname;
-    document.getElementById('lbCaption').textContent = p.caption || '';
-
-    const actions = document.getElementById('lbActions');
-    actions.innerHTML = isAdmin
-      ? `<button class="btn danger small" onclick="adminDelete(${p.id})">삭제(관리자)</button>`
-      : `<button class="btn ghost small" onclick="closeLightboxThenEdit(${p.id}, '${escapeHtml(p.pet_name).replace(/'/g,"\\'")}', '${escapeHtml(p.caption || '').replace(/'/g,"\\'")}')">수정/삭제</button>`;
+  function slideHtml(p){
+    return `
+      <div class="lb-slide" data-id="${p.id}">
+        <div class="lightbox-modal">
+          <img src="${p.image_url}" alt="${escapeHtml(p.pet_name)}" loading="lazy" decoding="async">
+          <div class="lightbox-body">
+            <p class="photo-name">${escapeHtml(p.pet_name)}</p>
+            <p class="photo-nick">by ${escapeHtml(p.nickname)}</p>
+            <p class="photo-caption">${escapeHtml(p.caption || '')}</p>
+            <div class="photo-actions">${actionsHtml(p)}</div>
+          </div>
+        </div>
+      </div>`;
   }
 
   function currentLbSlides(){
@@ -383,22 +384,7 @@
     if(targetSlide){
       targetSlide.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
     }
-    const p = currentPhotos.find(x => x.id === id);
-    if(p) updateLightboxInfo(p);
   };
-
-  let lbScrollDebounce;
-  document.getElementById('lbTrack').addEventListener('scroll', () => {
-    clearTimeout(lbScrollDebounce);
-    lbScrollDebounce = setTimeout(() => {
-      const slides = currentLbSlides();
-      if(slides.length === 0) return;
-      const idx = nearestSlideIndex();
-      const id = Number(slides[idx].dataset.id);
-      const p = currentPhotos.find(x => x.id === id);
-      if(p) updateLightboxInfo(p);
-    }, 120);
-  });
 
   function goToSlide(dir){
     const slides = currentLbSlides();
@@ -410,7 +396,7 @@
   document.getElementById('lbPrev').addEventListener('click', () => goToSlide(-1));
   document.getElementById('lbNext').addEventListener('click', () => goToSlide(1));
 
-  window.closeLightboxThenEdit = function(id, petName, caption){
+  window.openEditFromLightbox = function(id, petName, caption){
     document.getElementById('lightboxOverlay').classList.remove('open');
     openEdit(id, petName, caption);
   };
