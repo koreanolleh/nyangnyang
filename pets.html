@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>냥냥 사진관 — 우리 아이 자랑</title>
+<meta name="description" content="우리 집 고양이, 강아지를 자랑해보세요. 냥냥 사진관에서 귀여운 순간을 함께 나눠요.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#fff4d6; --paper:#ffffff; --ink:#2b2438; --ink-soft:#6b6178;
+    --coral:#ff6b5b; --coral-deep:#e0503f; --mint:#1fb6a8; --line:rgba(43,36,56,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Pretendard', -apple-system, sans-serif; line-height:1.6;
+  }
+  a{ color:inherit; text-decoration:none; }
+  .wrap{ max-width:1080px; margin:0 auto; padding:40px 20px 80px; }
+  .back{ font-size:0.85rem; color:var(--ink-soft); }
+  .top{ display:flex; align-items:center; justify-content:space-between; margin:16px 0 8px; flex-wrap:wrap; gap:12px; }
+  h1{ font-family:'Gaegu', sans-serif; font-size:2rem; margin:0; }
+  .sub{ color:var(--ink-soft); font-size:0.92rem; margin:4px 0 24px; }
+
+  .btn{
+    background:var(--coral); color:#fff; border:none; border-radius:999px;
+    padding:11px 20px; font-weight:700; font-size:0.9rem; cursor:pointer;
+  }
+  .btn:hover{ background:var(--coral-deep); }
+  .btn.ghost{ background:transparent; color:var(--ink-soft); border:1px solid var(--line); }
+  .btn.small{ padding:6px 14px; font-size:0.8rem; }
+  .btn.danger{ background:#fff; color:#e0503f; border:1px solid #f3c9c4; }
+
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:18px;
+  }
+  .photo-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:20px; overflow:hidden;
+  }
+  .photo-card img{ width:100%; height:200px; object-fit:cover; display:block; background:#f3ece0; }
+  .photo-body{ padding:14px 16px 16px; }
+  .photo-name{ font-weight:800; font-size:0.98rem; margin:0 0 2px; }
+  .photo-nick{ font-size:0.78rem; color:var(--ink-soft); margin:0 0 8px; }
+  .photo-caption{ font-size:0.88rem; color:var(--ink); margin:0 0 10px; word-break:break-word; }
+  .photo-actions{ display:flex; gap:6px; }
+  .empty{ text-align:center; padding:60px 20px; color:var(--ink-soft); }
+
+  /* 모달 공통 */
+  .overlay{
+    position:fixed; inset:0; background:rgba(43,36,56,0.5); display:none;
+    align-items:center; justify-content:center; padding:20px; z-index:100;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    background:var(--paper); border-radius:22px; padding:28px; width:100%; max-width:420px;
+    max-height:90vh; overflow-y:auto;
+  }
+  .modal h2{ font-family:'Gaegu', sans-serif; font-size:1.4rem; margin:0 0 16px; }
+  .modal label{ display:block; font-size:0.82rem; font-weight:700; margin:14px 0 6px; }
+  .modal input[type=text], .modal input[type=password], .modal textarea{
+    width:100%; border:1px solid var(--line); border-radius:10px; padding:9px 12px;
+    font-size:0.9rem; font-family:inherit; background:#fffaf0;
+  }
+  .modal textarea{ resize:vertical; min-height:60px; }
+  .modal input[type=file]{ margin-top:4px; }
+  .modal-actions{ display:flex; gap:8px; margin-top:20px; }
+  .modal-actions .btn{ flex:1; }
+  .modal .msg{ font-size:0.82rem; margin-top:10px; min-height:18px; }
+  .modal .msg.err{ color:var(--coral-deep); }
+  .modal .msg.ok{ color:var(--mint); }
+  /* 봇 방지용 허니팟 (사람 눈엔 안 보임) */
+  .hp{ position:absolute; left:-9999px; opacity:0; height:0; overflow:hidden; }
+
+  .admin-bar{
+    background:#2b2438; color:#fff; font-size:0.8rem; text-align:center;
+    padding:8px; border-radius:10px; margin-bottom:20px; display:none;
+  }
+  .admin-bar.on{ display:block; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <a class="back" href="index.html">← 냥냥 홈으로</a>
+
+  <div class="admin-bar" id="adminBar">🔓 관리자 모드 — 모든 사진에 삭제 버튼이 보여요</div>
+
+  <div class="top">
+    <div>
+      <h1>🐾 냥냥 사진관</h1>
+      <p class="sub">우리 집 고양이, 강아지 자랑해주세요</p>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn ghost small" id="adminToggle">관리자</button>
+      <button class="btn" id="openSubmit">사진 등록하기</button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid">
+    <p class="empty">불러오는 중…</p>
+  </div>
+</div>
+
+<!-- 등록 모달 -->
+<div class="overlay" id="submitOverlay">
+  <div class="modal">
+    <h2>🐾 우리 아이 자랑하기</h2>
+    <input type="text" class="hp" id="hpField" tabindex="-1" autocomplete="off">
+
+    <label>닉네임</label>
+    <input type="text" id="fNickname" maxlength="20" placeholder="예: 보리엄마">
+
+    <label>아이 이름</label>
+    <input type="text" id="fPetName" maxlength="20" placeholder="예: 보리">
+
+    <label>한마디</label>
+    <textarea id="fCaption" maxlength="200" placeholder="자랑하고 싶은 말을 적어주세요"></textarea>
+
+    <label>사진</label>
+    <input type="file" id="fPhoto" accept="image/*">
+
+    <label>비밀번호 (나중에 수정/삭제할 때 필요해요)</label>
+    <input type="password" id="fPassword" placeholder="4자 이상">
+
+    <div class="modal-actions">
+      <button class="btn ghost" id="cancelSubmit">취소</button>
+      <button class="btn" id="doSubmit">등록하기</button>
+    </div>
+    <p class="msg" id="submitMsg"></p>
+  </div>
+</div>
+
+<!-- 수정/삭제 모달 -->
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <h2>✏️ 수정 / 삭제</h2>
+    <p style="font-size:0.85rem; color:var(--ink-soft); margin-top:-8px;">등록할 때 입력한 비밀번호를 입력해주세요.</p>
+
+    <label>비밀번호</label>
+    <input type="password" id="ePassword" placeholder="비밀번호">
+
+    <label>아이 이름</label>
+    <input type="text" id="ePetName" maxlength="20">
+
+    <label>한마디</label>
+    <textarea id="eCaption" maxlength="200"></textarea>
+
+    <div class="modal-actions">
+      <button class="btn danger" id="doDelete">삭제</button>
+      <button class="btn" id="doEdit">수정 저장</button>
+    </div>
+    <div class="modal-actions" style="margin-top:8px;">
+      <button class="btn ghost" id="cancelEdit" style="flex:1;">닫기</button>
+    </div>
+    <p class="msg" id="editMsg"></p>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://jqgqaityiirpheazmslv.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_DeR9x8Vih8vCIWAeJ4Llfw_MNhpXnHJ";
+  const ADMIN_PASSWORD = "냥냥관리2026";
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  let isAdmin = false;
+  let pageLoadedAt = Date.now();
+  let editingId = null;
+
+  async function sha256(text){
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function escapeHtml(str){
+    return String(str || '').replace(/[&<>"']/g, s => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[s]));
+  }
+
+  function cardHtml(p){
+    const deleteBtn = isAdmin
+      ? `<button class="btn danger small" onclick="adminDelete(${p.id})">삭제(관리자)</button>`
+      : `<button class="btn ghost small" onclick="openEdit(${p.id}, '${escapeHtml(p.pet_name).replace(/'/g,"\\'")}', '${escapeHtml(p.caption || '').replace(/'/g,"\\'")}')">수정/삭제</button>`;
+    return `
+      <div class="photo-card">
+        <img src="${p.image_url}" alt="${escapeHtml(p.pet_name)}" loading="lazy">
+        <div class="photo-body">
+          <p class="photo-name">${escapeHtml(p.pet_name)}</p>
+          <p class="photo-nick">by ${escapeHtml(p.nickname)}</p>
+          <p class="photo-caption">${escapeHtml(p.caption)}</p>
+          <div class="photo-actions">${deleteBtn}</div>
+        </div>
+      </div>`;
+  }
+
+  async function loadGallery(){
+    const grid = document.getElementById('grid');
+    const { data, error } = await sb.from('pet_photos_public').select('*');
+    if(error){
+      grid.innerHTML = `<p class="empty">불러오지 못했어요: ${error.message}</p>`;
+      return;
+    }
+    if(!data || data.length === 0){
+      grid.innerHTML = `<p class="empty">아직 등록된 사진이 없어요. 첫 번째로 자랑해보세요! 🐾</p>`;
+      return;
+    }
+    grid.innerHTML = data.map(cardHtml).join('');
+  }
+
+  // ===== 관리자 모드 =====
+  document.getElementById('adminToggle').addEventListener('click', () => {
+    if(isAdmin){
+      isAdmin = false;
+      document.getElementById('adminBar').classList.remove('on');
+      loadGallery();
+      return;
+    }
+    const pw = prompt('관리자 비밀번호를 입력하세요');
+    if(pw === ADMIN_PASSWORD){
+      isAdmin = true;
+      document.getElementById('adminBar').classList.add('on');
+      loadGallery();
+    }else if(pw !== null){
+      alert('비밀번호가 틀렸습니다');
+    }
+  });
+
+  window.adminDelete = async function(id){
+    if(!confirm('이 사진을 삭제할까요? (관리자 강제 삭제)')) return;
+    const { data, error } = await sb.rpc('admin_delete_pet_photo', {
+      post_id: id, admin_key: ADMIN_PASSWORD
+    });
+    if(error || !data){
+      alert('삭제 실패: ' + (error ? error.message : '권한 없음'));
+      return;
+    }
+    loadGallery();
+  };
+
+  // ===== 등록 모달 =====
+  const submitOverlay = document.getElementById('submitOverlay');
+  document.getElementById('openSubmit').addEventListener('click', () => {
+    submitOverlay.classList.add('open');
+    document.getElementById('submitMsg').textContent = '';
+  });
+  document.getElementById('cancelSubmit').addEventListener('click', () => {
+    submitOverlay.classList.remove('open');
+  });
+
+  document.getElementById('doSubmit').addEventListener('click', async () => {
+    const msgEl = document.getElementById('submitMsg');
+    const hp = document.getElementById('hpField').value;
+    const nickname = document.getElementById('fNickname').value.trim();
+    const petName = document.getElementById('fPetName').value.trim();
+    const caption = document.getElementById('fCaption').value.trim();
+    const password = document.getElementById('fPassword').value;
+    const fileInput = document.getElementById('fPhoto');
+    const file = fileInput.files[0];
+
+    // 봇 방지: 허니팟 필드가 채워져 있거나, 페이지 연 지 3초도 안 됐으면 차단
+    if(hp){ msgEl.textContent = '등록에 실패했어요.'; msgEl.className = 'msg err'; return; }
+    if(Date.now() - pageLoadedAt < 3000){
+      msgEl.textContent = '너무 빨리 등록하셨어요. 잠시 후 다시 시도해주세요.';
+      msgEl.className = 'msg err';
+      return;
+    }
+    if(!nickname || !petName || !file || !password){
+      msgEl.textContent = '닉네임, 아이 이름, 사진, 비밀번호는 필수예요.';
+      msgEl.className = 'msg err';
+      return;
+    }
+    if(password.length < 4){
+      msgEl.textContent = '비밀번호는 4자 이상으로 해주세요.';
+      msgEl.className = 'msg err';
+      return;
+    }
+    if(!file.type.startsWith('image/')){
+      msgEl.textContent = '이미지 파일만 업로드할 수 있어요.';
+      msgEl.className = 'msg err';
+      return;
+    }
+
+    msgEl.textContent = '등록 중...';
+    msgEl.className = 'msg';
+
+    try{
+      const ext = file.name.split('.').pop();
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await sb.storage.from('pet-photos').upload(path, file);
+      if(uploadError) throw new Error(uploadError.message);
+
+      const { data: urlData } = sb.storage.from('pet-photos').getPublicUrl(path);
+      const passwordHash = await sha256(password);
+
+      const { error: insertError } = await sb.from('pet_photos').insert({
+        nickname, pet_name: petName, caption,
+        image_url: urlData.publicUrl,
+        password_hash: passwordHash
+      });
+      if(insertError) throw new Error(insertError.message);
+
+      msgEl.textContent = '등록 완료!';
+      msgEl.className = 'msg ok';
+      setTimeout(() => {
+        submitOverlay.classList.remove('open');
+        document.getElementById('fNickname').value = '';
+        document.getElementById('fPetName').value = '';
+        document.getElementById('fCaption').value = '';
+        document.getElementById('fPassword').value = '';
+        fileInput.value = '';
+        loadGallery();
+      }, 700);
+    }catch(e){
+      msgEl.textContent = '오류: ' + e.message;
+      msgEl.className = 'msg err';
+    }
+  });
+
+  // ===== 수정/삭제 모달 =====
+  const editOverlay = document.getElementById('editOverlay');
+  window.openEdit = function(id, petName, caption){
+    editingId = id;
+    document.getElementById('ePetName').value = petName;
+    document.getElementById('eCaption').value = caption;
+    document.getElementById('ePassword').value = '';
+    document.getElementById('editMsg').textContent = '';
+    editOverlay.classList.add('open');
+  };
+  document.getElementById('cancelEdit').addEventListener('click', () => {
+    editOverlay.classList.remove('open');
+  });
+
+  document.getElementById('doEdit').addEventListener('click', async () => {
+    const msgEl = document.getElementById('editMsg');
+    const password = document.getElementById('ePassword').value;
+    const petName = document.getElementById('ePetName').value.trim();
+    const caption = document.getElementById('eCaption').value.trim();
+    if(!password){ msgEl.textContent = '비밀번호를 입력하세요.'; msgEl.className = 'msg err'; return; }
+
+    const hash = await sha256(password);
+    const { data, error } = await sb.rpc('edit_pet_photo', {
+      post_id: editingId, pw_hash: hash, new_pet_name: petName, new_caption: caption
+    });
+    if(error || !data){
+      msgEl.textContent = '비밀번호가 틀렸거나 수정에 실패했어요.';
+      msgEl.className = 'msg err';
+      return;
+    }
+    msgEl.textContent = '수정 완료!';
+    msgEl.className = 'msg ok';
+    setTimeout(() => { editOverlay.classList.remove('open'); loadGallery(); }, 600);
+  });
+
+  document.getElementById('doDelete').addEventListener('click', async () => {
+    const msgEl = document.getElementById('editMsg');
+    const password = document.getElementById('ePassword').value;
+    if(!password){ msgEl.textContent = '비밀번호를 입력하세요.'; msgEl.className = 'msg err'; return; }
+    if(!confirm('정말 삭제할까요?')) return;
+
+    const hash = await sha256(password);
+    const { data, error } = await sb.rpc('delete_pet_photo', { post_id: editingId, pw_hash: hash });
+    if(error || !data){
+      msgEl.textContent = '비밀번호가 틀렸거나 삭제에 실패했어요.';
+      msgEl.className = 'msg err';
+      return;
+    }
+    msgEl.textContent = '삭제 완료!';
+    msgEl.className = 'msg ok';
+    setTimeout(() => { editOverlay.classList.remove('open'); loadGallery(); }, 600);
+  });
+
+  // ===== 방문 통계 =====
+  (function trackVisit(){
+    try{
+      let vid = localStorage.getItem('nyang_vid');
+      if(!vid){ vid = crypto.randomUUID(); localStorage.setItem('nyang_vid', vid); }
+      sb.from('page_views').insert({
+        path: location.pathname, visitor_id: vid, referrer: document.referrer || null
+      }).then(()=>{}).catch(()=>{});
+    }catch(e){}
+  })();
+
+  loadGallery();
+</script>
+</body>
+</html>
