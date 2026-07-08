@@ -211,6 +211,39 @@
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
+  // 업로드 전 브라우저에서 사진을 줄이고 압축 (로딩 속도 개선)
+  function compressImage(file, maxSize = 1080, quality = 0.82){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      reader.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if(width > maxSize || height > maxSize){
+          if(width > height){
+            height = Math.round(height * (maxSize / width));
+            width = maxSize;
+          }else{
+            width = Math.round(width * (maxSize / height));
+            height = maxSize;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => blob ? resolve(blob) : reject(new Error('이미지 압축 실패')),
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   function escapeHtml(str){
     return String(str || '').replace(/[&<>"']/g, s => ({
       '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
@@ -222,7 +255,7 @@
   function tileHtml(p){
     return `
       <div class="tile" onclick="openLightbox(${p.id})">
-        <img src="${p.image_url}" alt="${escapeHtml(p.pet_name)}" loading="lazy">
+        <img src="${p.image_url}" alt="${escapeHtml(p.pet_name)}" loading="lazy" decoding="async">
         <div class="tile-caption">${escapeHtml(p.pet_name)}</div>
       </div>`;
   }
@@ -343,13 +376,17 @@
       return;
     }
 
-    msgEl.textContent = '등록 중...';
+    msgEl.textContent = '사진 최적화 중...';
     msgEl.className = 'msg';
 
     try{
-      const ext = file.name.split('.').pop();
-      const path = `${crypto.randomUUID()}.${ext}`;
-      const { error: uploadError } = await sb.storage.from('pet-photos').upload(path, file);
+      const compressedBlob = await compressImage(file);
+      const path = `${crypto.randomUUID()}.jpg`;
+
+      msgEl.textContent = '등록 중...';
+      const { error: uploadError } = await sb.storage.from('pet-photos').upload(path, compressedBlob, {
+        contentType: 'image/jpeg'
+      });
       if(uploadError) throw new Error(uploadError.message);
 
       const { data: urlData } = sb.storage.from('pet-photos').getPublicUrl(path);

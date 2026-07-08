@@ -380,7 +380,7 @@
       row.innerHTML = data.map(p => `
         <a class="card" href="pets.html">
           <div class="card-thumb thumb-pets">
-            <img src="${p.image_url}" alt="${escapePetsHtml(p.pet_name)}" loading="lazy">
+            <img src="${p.image_url}" alt="${escapePetsHtml(p.pet_name)}" loading="lazy" decoding="async">
           </div>
           <div class="card-body">
             <p class="card-title">${escapePetsHtml(p.pet_name)}</p>
