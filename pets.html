@@ -71,11 +71,28 @@
   /* 라이트박스 (사진 확대) */
   .lightbox-modal{
     background:var(--paper); border-radius:20px; overflow:hidden; width:100%; max-width:460px;
-    max-height:88vh; overflow-y:auto;
+    max-height:88vh; display:flex; flex-direction:column; position:relative;
   }
-  .lightbox-modal img{
-    width:100%; max-height:56vh; object-fit:cover; display:block; background:#f3ece0;
+  .lb-track{
+    display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none; padding:0 8%; background:#f3ece0;
   }
+  .lb-track::-webkit-scrollbar{ display:none; }
+  .lb-slide{
+    flex:0 0 84%; scroll-snap-align:center; margin-right:10px; padding:10px 0;
+  }
+  .lb-slide:last-child{ margin-right:0; }
+  .lb-slide img{
+    width:100%; height:50vh; object-fit:cover; border-radius:14px; display:block; background:#e9dfcd;
+  }
+  .lb-nav{
+    position:absolute; top:calc(25vh + 10px); transform:translateY(-50%); z-index:5;
+    background:rgba(20,15,10,0.45); color:#fff; border:none; width:36px; height:36px;
+    border-radius:50%; font-size:20px; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .lb-nav:hover{ background:rgba(20,15,10,0.65); }
+  .lb-prev{ left:6px; } .lb-next{ right:6px; }
   .lightbox-body{ padding:20px; }
   .lightbox-body .photo-name{ font-size:1.15rem; }
   .photo-name{ font-weight:800; font-size:0.98rem; margin:0 0 2px; }
@@ -143,10 +160,12 @@
   </div>
 </div>
 
-<!-- 라이트박스: 사진 클릭하면 확대 -->
+<!-- 라이트박스: 사진 클릭하면 확대 + 좌우 스와이프 -->
 <div class="overlay" id="lightboxOverlay">
   <div class="lightbox-modal">
-    <img id="lbImage" alt="">
+    <button class="lb-nav lb-prev" id="lbPrev" aria-label="이전 사진">‹</button>
+    <button class="lb-nav lb-next" id="lbNext" aria-label="다음 사진">›</button>
+    <div class="lb-track" id="lbTrack"></div>
     <div class="lightbox-body">
       <p class="photo-name" id="lbPetName"></p>
       <p class="photo-nick" id="lbNick"></p>
@@ -322,12 +341,14 @@
     btn.textContent = '사진 더 보기';
   });
 
-  // ===== 라이트박스 (사진 확대) =====
-  window.openLightbox = function(id){
-    const p = currentPhotos.find(x => x.id === id);
-    if(!p) return;
-    document.getElementById('lbImage').src = p.image_url;
-    document.getElementById('lbImage').alt = p.pet_name;
+  // ===== 라이트박스 (사진 확대 + 좌우 스와이프) =====
+  function slideHtml(p){
+    return `<div class="lb-slide" data-id="${p.id}">
+      <img src="${p.image_url}" alt="${escapeHtml(p.pet_name)}" loading="lazy" decoding="async">
+    </div>`;
+  }
+
+  function updateLightboxInfo(p){
     document.getElementById('lbPetName').textContent = p.pet_name;
     document.getElementById('lbNick').textContent = 'by ' + p.nickname;
     document.getElementById('lbCaption').textContent = p.caption || '';
@@ -336,9 +357,58 @@
     actions.innerHTML = isAdmin
       ? `<button class="btn danger small" onclick="adminDelete(${p.id})">삭제(관리자)</button>`
       : `<button class="btn ghost small" onclick="closeLightboxThenEdit(${p.id}, '${escapeHtml(p.pet_name).replace(/'/g,"\\'")}', '${escapeHtml(p.caption || '').replace(/'/g,"\\'")}')">수정/삭제</button>`;
+  }
 
+  function currentLbSlides(){
+    return [...document.getElementById('lbTrack').querySelectorAll('.lb-slide')];
+  }
+
+  function nearestSlideIndex(){
+    const track = document.getElementById('lbTrack');
+    const center = track.scrollLeft + track.clientWidth / 2;
+    let best = 0, bestDist = Infinity;
+    currentLbSlides().forEach((s, i) => {
+      const dist = Math.abs((s.offsetLeft + s.offsetWidth / 2) - center);
+      if(dist < bestDist){ bestDist = dist; best = i; }
+    });
+    return best;
+  }
+
+  window.openLightbox = function(id){
+    const track = document.getElementById('lbTrack');
+    track.innerHTML = currentPhotos.map(slideHtml).join('');
     document.getElementById('lightboxOverlay').classList.add('open');
+
+    const targetSlide = track.querySelector(`[data-id="${id}"]`);
+    if(targetSlide){
+      targetSlide.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
+    }
+    const p = currentPhotos.find(x => x.id === id);
+    if(p) updateLightboxInfo(p);
   };
+
+  let lbScrollDebounce;
+  document.getElementById('lbTrack').addEventListener('scroll', () => {
+    clearTimeout(lbScrollDebounce);
+    lbScrollDebounce = setTimeout(() => {
+      const slides = currentLbSlides();
+      if(slides.length === 0) return;
+      const idx = nearestSlideIndex();
+      const id = Number(slides[idx].dataset.id);
+      const p = currentPhotos.find(x => x.id === id);
+      if(p) updateLightboxInfo(p);
+    }, 120);
+  });
+
+  function goToSlide(dir){
+    const slides = currentLbSlides();
+    if(slides.length === 0) return;
+    const idx = nearestSlideIndex();
+    const next = Math.min(Math.max(idx + dir, 0), slides.length - 1);
+    slides[next].scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }
+  document.getElementById('lbPrev').addEventListener('click', () => goToSlide(-1));
+  document.getElementById('lbNext').addEventListener('click', () => goToSlide(1));
 
   window.closeLightboxThenEdit = function(id, petName, caption){
     document.getElementById('lightboxOverlay').classList.remove('open');
