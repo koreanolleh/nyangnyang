@@ -76,7 +76,8 @@
     display:flex; align-items:center; justify-content:space-between;
   }
   .logo{font-family:'Gaegu', sans-serif; font-weight:700; font-size:1.7rem; color:var(--coral-deep);}
-  nav.chips{display:flex; gap:8px;}
+  nav.chips{display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; min-width:0;}
+  nav.chips::-webkit-scrollbar{display:none;}
   nav.chips a{
     font-size:0.85rem; font-weight:600; padding:7px 14px; border-radius:999px;
     background:var(--paper); border:1px solid var(--line); color:var(--ink-soft);
@@ -115,7 +116,7 @@
   .cat-head{display:flex; align-items:baseline; justify-content:space-between; padding:0 20px 10px;}
   .cat-title{font-family:'Gaegu', sans-serif; font-weight:700; font-size:1.55rem; display:flex; align-items:center; gap:9px;}
   .cat-dot{width:10px; height:10px; border-radius:50%;}
-  .dot-test{background:var(--coral);} .dot-fortune{background:#9b6b2f;} .dot-game{background:var(--mint);} .dot-toon{background:var(--violet);}
+  .dot-test{background:var(--coral);} .dot-fortune{background:#9b6b2f;} .dot-game{background:var(--mint);} .dot-toon{background:var(--violet);} .dot-pets{background:#d46ba0;}
   .cat-more{font-size:0.85rem; color:var(--ink-soft); font-weight:600;}
 
   .row{
@@ -140,6 +141,7 @@
   .thumb-fortune{background:linear-gradient(160deg, #f3e3c8, #e8cfa0);}
   .thumb-game{background:linear-gradient(160deg, #d7f5f0, #b7e9e0);}
   .thumb-toon{background:linear-gradient(160deg, #e6ddff, #d2c2ff);}
+  .thumb-pets{background:linear-gradient(160deg, #ffe1ee, #ffc3dd);}
   .badge{
     position:absolute; top:10px; left:10px; font-size:0.68rem; font-weight:800;
     padding:4px 9px; border-radius:999px; color:#fff;
@@ -177,7 +179,7 @@
       <a href="#fortune">운세</a>
       <a href="#tests">퀴즈</a>
       <a href="#games">게임</a>
-      <a href="pets.html">사진관</a>
+      <a href="pets.html">멍냥사진관</a>
       <a href="#toons">4컷툰</a>
     </nav>
   </div>
@@ -304,13 +306,18 @@
   </div>
 </section>
 
-<div class="soon-banner">
-  <div class="soon-card" style="border-style:solid; border-color:var(--coral);">
-    <strong>🐾 냥냥 사진관 — 우리 아이 자랑하기</strong>
-    <p>우리 집 고양이, 강아지 사진을 올리고 다른 집사님들과 나눠보세요.</p>
-    <a href="pets.html" style="display:inline-block; margin-top:14px; background:var(--coral); color:#fff; padding:10px 22px; border-radius:999px; font-weight:700; font-size:0.88rem;">사진관 구경하기 →</a>
+<section class="category" id="pets">
+  <div class="cat-head">
+    <h2 class="cat-title"><span class="cat-dot dot-pets"></span>멍냥사진관</h2>
+    <span class="cat-more" id="petsCount">불러오는 중…</span>
   </div>
-</div>
+  <div class="row" id="petsRow">
+    <p style="color:var(--ink-soft); font-size:0.85rem; padding:0 20px;">불러오는 중…</p>
+  </div>
+  <div style="text-align:center; padding:6px 20px 4px;">
+    <a href="pets.html" style="display:inline-block; background:var(--coral); color:#fff; padding:10px 24px; border-radius:999px; font-weight:700; font-size:0.88rem;">사진관 구경하기 →</a>
+  </div>
+</section>
 
 <div class="soon-banner" id="toons">
   <div class="soon-card">
@@ -326,15 +333,15 @@
   <a href="contact.html" style="color:inherit; text-decoration:underline;">문의</a>
 </footer>
 
-<!-- ===== 방문 통계 추적 (Supabase) ===== -->
+<!-- ===== Supabase 연동 (통계 + 사진관 미리보기) ===== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   const SUPABASE_URL = "https://jqgqaityiirpheazmslv.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_DeR9x8Vih8vCIWAeJ4Llfw_MNhpXnHJ";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   (function trackVisit(){
     try{
-      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       let vid = localStorage.getItem('nyang_vid');
       if(!vid){
         vid = crypto.randomUUID();
@@ -347,6 +354,48 @@
       }).then(()=>{}).catch(()=>{});
     }catch(e){ /* 통계 실패해도 사이트 이용엔 지장 없도록 조용히 무시 */ }
   })();
+
+  function escapePetsHtml(str){
+    return String(str || '').replace(/[&<>"']/g, s => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[s]));
+  }
+
+  async function loadPetsPreview(){
+    const row = document.getElementById('petsRow');
+    const countEl = document.getElementById('petsCount');
+    try{
+      const { data, error } = await sb
+        .from('pet_photos_public')
+        .select('*')
+        .limit(8);
+      if(error) throw error;
+
+      if(!data || data.length === 0){
+        row.innerHTML = `<p style="color:var(--ink-soft); font-size:0.85rem; padding:0 20px;">아직 등록된 사진이 없어요. 첫 번째로 자랑해보세요! 🐾</p>`;
+        countEl.textContent = '0개 공개중';
+        return;
+      }
+
+      row.innerHTML = data.map(p => `
+        <a class="card" href="pets.html">
+          <div class="card-thumb thumb-pets">
+            <img src="${p.image_url}" alt="${escapePetsHtml(p.pet_name)}" loading="lazy">
+          </div>
+          <div class="card-body">
+            <p class="card-title">${escapePetsHtml(p.pet_name)}</p>
+            <p class="card-desc">by ${escapePetsHtml(p.nickname)}</p>
+          </div>
+        </a>
+      `).join('');
+      countEl.textContent = `${data.length}개 공개중`;
+    }catch(e){
+      row.innerHTML = `<p style="color:var(--ink-soft); font-size:0.85rem; padding:0 20px;">불러오지 못했어요.</p>`;
+      countEl.textContent = '';
+    }
+  }
+
+  loadPetsPreview();
 </script>
 
 </body>
