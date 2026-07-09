@@ -482,45 +482,122 @@
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = '#fff4d6';
+    // 배경 그라데이션
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#fff8e8');
+    bg.addColorStop(1, '#ffe9ad');
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    const box = { x: 64, y: 64, w: W - 128, h: 980 };
-    const img = await loadImageEl(p.image_url);
+    // 배경 장식용 발자국 (은은하게 흩뿌림)
+    ctx.save();
+    ctx.globalAlpha = 0.14;
+    ctx.font = "54px sans-serif";
+    ctx.textAlign = 'center';
+    const pawSpots = [
+      [110, 130, -20], [960, 110, 15], [90, 1260, 10], [980, 1280, -15],
+      [70, 700, 8], [1010, 640, -10]
+    ];
+    pawSpots.forEach(([x, y, deg]) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(deg * Math.PI / 180);
+      ctx.fillText('🐾', 0, 0);
+      ctx.restore();
+    });
+    ctx.restore();
+
+    // 사진 영역 (바깥 흰색 매트 + 안쪽 사진 + 이중 테두리)
+    const mat = { x: 46, y: 46, w: W - 92, h: 1000 };
+    const box = { x: mat.x + 22, y: mat.y + 22, w: mat.w - 44, h: mat.h - 44 };
 
     ctx.save();
-    roundRectPath(ctx, box.x, box.y, box.w, box.h, 32);
+    ctx.shadowColor = 'rgba(43,36,56,0.18)';
+    ctx.shadowBlur = 28;
+    ctx.shadowOffsetY = 10;
+    ctx.fillStyle = '#ffffff';
+    roundRectPath(ctx, mat.x, mat.y, mat.w, mat.h, 36);
+    ctx.fill();
+    ctx.restore();
+
+    const img = await loadImageEl(p.image_url);
+    ctx.save();
+    roundRectPath(ctx, box.x, box.y, box.w, box.h, 26);
     ctx.clip();
     const scale = Math.max(box.w / img.width, box.h / img.height);
     const dw = img.width * scale, dh = img.height * scale;
     ctx.drawImage(img, box.x + (box.w - dw) / 2, box.y + (box.h - dh) / 2, dw, dh);
     ctx.restore();
 
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = '#ff6b5b';
-    roundRectPath(ctx, box.x, box.y, box.w, box.h, 32);
+    // 사진 안쪽 얇은 테두리
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    roundRectPath(ctx, box.x, box.y, box.w, box.h, 26);
     ctx.stroke();
 
+    // 바깥 코랄 테두리 + 겨자색 이중선
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = '#ff6b5b';
+    roundRectPath(ctx, mat.x, mat.y, mat.w, mat.h, 36);
+    ctx.stroke();
+
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#f2b134';
+    roundRectPath(ctx, mat.x - 12, mat.y - 12, mat.w + 24, mat.h + 24, 42);
+    ctx.stroke();
+
+    // 좌상단 리본 배지
+    ctx.save();
+    ctx.translate(mat.x + 46, mat.y + 4);
+    ctx.rotate(-14 * Math.PI / 180);
+    ctx.fillStyle = '#ff6b5b';
+    roundRectPath(ctx, -64, -30, 128, 52, 10);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = "700 26px 'Gaegu', sans-serif";
+    ctx.textAlign = 'center';
+    ctx.fillText('오늘의 냥멍', 0, 4);
+    ctx.restore();
+
+    // 이름 / 닉네임 / 캡션
     ctx.textAlign = 'center';
     ctx.fillStyle = '#2b2438';
-    ctx.font = "700 66px 'Gaegu', sans-serif";
-    ctx.fillText(p.pet_name, W / 2, box.y + box.h + 100);
+    ctx.font = "700 68px 'Gaegu', sans-serif";
+    ctx.fillText(`🐾 ${p.pet_name}`, W / 2, mat.y + mat.h + 110);
 
     ctx.font = "400 32px 'Pretendard', sans-serif";
     ctx.fillStyle = '#6b6178';
-    ctx.fillText('by ' + p.nickname, W / 2, box.y + box.h + 150);
+    ctx.fillText('by ' + p.nickname, W / 2, mat.y + mat.h + 160);
 
     if(p.caption){
       ctx.font = "400 30px 'Pretendard', sans-serif";
       ctx.fillStyle = '#2b2438';
       const maxWidth = W - 160;
       let line = p.caption.length > 40 ? p.caption.slice(0, 40) + '…' : p.caption;
-      ctx.fillText(line, W / 2, box.y + box.h + 200, maxWidth);
+      ctx.fillText(line, W / 2, mat.y + mat.h + 208, maxWidth);
     }
 
-    ctx.font = "700 30px 'Gaegu', sans-serif";
-    ctx.fillStyle = '#e0503f';
-    ctx.fillText('🐾 냥냥사진관 · nyangnyang.kr', W / 2, H - 48);
+    // 하단 점선 구분선
+    ctx.save();
+    ctx.strokeStyle = 'rgba(43,36,56,0.18)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 10]);
+    ctx.beginPath();
+    ctx.moveTo(120, H - 96);
+    ctx.lineTo(W - 120, H - 96);
+    ctx.stroke();
+    ctx.restore();
+
+    // 워터마크 배지
+    ctx.save();
+    const wmW = 380, wmH = 56;
+    roundRectPath(ctx, W / 2 - wmW / 2, H - 74, wmW, wmH, 28);
+    ctx.fillStyle = '#2b2438';
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = "700 28px 'Gaegu', sans-serif";
+    ctx.fillText('🐾 냥냥사진관 · nyangnyang.kr', W / 2, H - 36);
+    ctx.restore();
 
     return canvas;
   }

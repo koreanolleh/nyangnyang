@@ -55,13 +55,27 @@
     display:grid; grid-template-columns:repeat(5, 1fr); gap:10px;
   }
   .sticker-slot{
-    aspect-ratio:1/1; border-radius:14px; display:flex; align-items:center; justify-content:center;
-    font-size:1.7rem; background:#fdf6e8; border:1.5px dashed var(--line);
+    aspect-ratio:1/1; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:1.9rem; position:relative;
   }
   .sticker-slot.collected{
-    background:linear-gradient(160deg, #fff1e0, #ffe1c4); border:1.5px solid var(--coral);
+    background:var(--slot-bg, #ffe1c4);
+    border:3px solid #fff;
+    box-shadow:0 0 0 2.5px var(--slot-ring, #ff6b5b), 0 6px 10px -4px rgba(43,36,56,0.35);
+    transform:rotate(var(--rot, -4deg));
+    animation:sticker-in 0.35s ease backwards;
   }
-  .sticker-slot.locked{ color:transparent; text-shadow:0 0 0 rgba(0,0,0,0); filter:grayscale(1) opacity(0.35); }
+  .sticker-slot.locked{
+    background:#fdf6e8; border:2px dashed #e6d9bd; font-size:1.3rem; opacity:0.55;
+  }
+  @keyframes sticker-in{
+    0%{ transform:rotate(var(--rot, -4deg)) scale(0.5); opacity:0; }
+    70%{ transform:rotate(var(--rot, -4deg)) scale(1.12); }
+    100%{ transform:rotate(var(--rot, -4deg)) scale(1); opacity:1; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .sticker-slot.collected{ animation:none; }
+  }
 
   @media (prefers-reduced-motion: reduce){
     .reveal .sticker-big{ animation:none; }
@@ -102,11 +116,24 @@
     return vid;
   }
 
+  const STICKER_PALETTE = [
+    { bg:'#ffe1da', ring:'#ff6b5b' }, { bg:'#d7f5f0', ring:'#1fb6a8' },
+    { bg:'#e6ddff', ring:'#7c5cfc' }, { bg:'#fff1c2', ring:'#f2b134' },
+    { bg:'#ffe1ee', ring:'#d46ba0' }, { bg:'#f3e3c8', ring:'#9b6b2f' },
+  ];
+  const ROTATIONS = [-6, 4, -3, 7, -8, 3, -4, 6];
+
   function renderStickerBook(collectedSet){
     document.getElementById('collectedCount').textContent = collectedSet.size;
     document.getElementById('stickerGrid').innerHTML = STICKERS.map((emoji, i) => {
       const collected = collectedSet.has(i);
-      return `<div class="sticker-slot ${collected ? 'collected' : 'locked'}">${collected ? emoji : '?'}</div>`;
+      if(!collected){
+        return `<div class="sticker-slot locked">🐾</div>`;
+      }
+      const c = STICKER_PALETTE[i % STICKER_PALETTE.length];
+      const rot = ROTATIONS[i % ROTATIONS.length];
+      const delay = (i % 8) * 0.04;
+      return `<div class="sticker-slot collected" style="--slot-bg:${c.bg}; --slot-ring:${c.ring}; --rot:${rot}deg; animation-delay:${delay}s;">${emoji}</div>`;
     }).join('');
   }
 
