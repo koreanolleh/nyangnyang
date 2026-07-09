@@ -82,6 +82,26 @@
 
   main{ max-width:720px; margin:0 auto; padding:0 20px 60px; }
 
+  .tabbar-sticky{
+    position:sticky; top:53px; z-index:45; background:var(--bg);
+    border-bottom:1px solid var(--line); padding:6px 0;
+  }
+  .tabbar{
+    max-width:720px; margin:0 auto; padding:0 20px;
+    display:flex; gap:6px; overflow-x:auto; scrollbar-width:none;
+  }
+  .tabbar::-webkit-scrollbar{ display:none; }
+  .tab-btn{
+    flex:none; display:flex; align-items:center; gap:6px;
+    background:transparent; border:1.5px solid transparent; padding:8px 13px; border-radius:999px;
+    font-size:0.82rem; font-weight:700; color:var(--ink-soft); cursor:pointer; white-space:nowrap;
+  }
+  .tab-btn .dot{ width:7px; height:7px; border-radius:50%; background:var(--dot, var(--coral)); }
+  .tab-btn.active{
+    background:var(--paper); color:var(--ink); border-color:var(--line);
+    box-shadow:0 2px 6px rgba(43,36,56,0.08);
+  }
+
   /* 출석체크 - 상단 고정 배너 */
   .attendance-banner{
     background:var(--paper); border:1px solid var(--line); border-radius:14px;
@@ -104,7 +124,11 @@
   .checkin-note{ width:100%; font-size:0.7rem; color:var(--ink-soft); }
 
   /* 카테고리 섹션 (통일된 스타일) */
-  .section{ margin-bottom:30px; }
+  .section{ margin-bottom:22px; border-radius:20px; padding:16px 16px 18px; }
+  .section-fortune{ background:rgba(155,107,47,0.055); }
+  .section-tests{ background:rgba(255,107,91,0.055); }
+  .section-games{ background:rgba(31,182,168,0.06); }
+  .section-pets{ background:rgba(212,107,160,0.06); }
   .section-head{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
   .section-head .sicon{ font-size:1.1rem; }
   .section-head h2{ font-family:'Gaegu', sans-serif; font-size:1.15rem; margin:0; }
@@ -188,10 +212,20 @@
   </div>
 </div>
 
+<div class="tabbar-sticky">
+  <nav class="tabbar" id="tabbar">
+    <button class="tab-btn" data-target="attendance" style="--dot:var(--c-attendance)"><span class="dot"></span>출석체크</button>
+    <button class="tab-btn" data-target="fortune" style="--dot:var(--c-fortune)"><span class="dot"></span>운세</button>
+    <button class="tab-btn" data-target="tests" style="--dot:var(--c-test)"><span class="dot"></span>퀴즈</button>
+    <button class="tab-btn" data-target="games" style="--dot:var(--c-game)"><span class="dot"></span>게임</button>
+    <button class="tab-btn" data-target="pets" style="--dot:var(--c-pets)"><span class="dot"></span>사진관</button>
+  </nav>
+</div>
+
 <main>
 
   <!-- 출석체크: 최상단 -->
-  <div class="attendance-banner">
+  <div class="attendance-banner" id="attendance">
     <div class="attendance-left">
       <div class="attendance-icon">📅</div>
       <div class="attendance-copy">
@@ -199,15 +233,17 @@
         <span id="attSubline">매일 출석하고 스티커를 모아보세요</span>
       </div>
     </div>
-    <button class="checkin-btn" id="checkinBtn">오늘 출석하기</button>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="checkin-btn" id="checkinBtn">오늘 출석하기</button>
+      <a href="attendance.html" style="font-size:0.72rem; color:var(--ink-soft); text-decoration:underline; white-space:nowrap;">스티커북 보기</a>
+    </div>
     <div class="checkin-note" id="checkinNote"></div>
   </div>
 
   <!-- 운세 -->
-  <section class="section" id="fortune">
+  <section class="section section-fortune" id="fortune">
     <div class="section-head">
       <span class="sicon">🔮</span><h2>운세</h2>
-      <a class="more" href="#fortune">더보기</a>
     </div>
     <div class="row">
       <a class="card" href="tarot/myeongnyang-tarot.html">
@@ -222,7 +258,7 @@
   </section>
 
   <!-- 퀴즈 -->
-  <section class="section" id="tests">
+  <section class="section section-tests" id="tests">
     <div class="section-head">
       <span class="sicon">❓</span><h2>퀴즈</h2>
     </div>
@@ -243,7 +279,7 @@
   </section>
 
   <!-- 게임 -->
-  <section class="section" id="games">
+  <section class="section section-games" id="games">
     <div class="section-head">
       <span class="sicon">🎮</span><h2>게임</h2>
     </div>
@@ -260,7 +296,7 @@
   </section>
 
   <!-- 사진관 -->
-  <section class="section" id="pets">
+  <section class="section section-pets" id="pets">
     <div class="section-head">
       <span class="sicon">📷</span><h2>멍냥사진관</h2>
       <a class="more" href="pets.html">전체보기</a>
@@ -273,6 +309,10 @@
 
     <div class="row" id="petsRow">
       <p class="empty-note">불러오는 중…</p>
+    </div>
+
+    <div style="text-align:center; margin-top:14px;">
+      <a href="pets.html" style="display:inline-block; background:var(--c-pets); color:#fff; padding:10px 22px; border-radius:999px; font-weight:700; font-size:0.85rem;">🐾 우리 아이 자랑하기</a>
     </div>
   </section>
 
@@ -293,6 +333,38 @@
     if(!vid){ vid = crypto.randomUUID(); localStorage.setItem('nyang_vid', vid); }
     return vid;
   }
+
+  // ===== 탭바: 클릭 시 스크롤 이동 + 스크롤 위치에 따른 자동 하이라이트 =====
+  (function setupTabbar(){
+    const tabBtns = [...document.querySelectorAll('.tab-btn')];
+    const targets = tabBtns.map(b => document.getElementById(b.dataset.target)).filter(Boolean);
+
+    function stickyOffset(){
+      const header = document.querySelector('header');
+      const bar = document.querySelector('.tabbar-sticky');
+      return (header ? header.offsetHeight : 0) + (bar ? bar.offsetHeight : 0) + 10;
+    }
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = document.getElementById(btn.dataset.target);
+        if(!target) return;
+        const top = target.getBoundingClientRect().top + window.scrollY - stickyOffset();
+        window.scrollTo({ top, behavior: 'smooth' });
+      });
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          const id = entry.target.id;
+          tabBtns.forEach(b => b.classList.toggle('active', b.dataset.target === id));
+        }
+      });
+    }, { rootMargin: `-${120}px 0px -70% 0px`, threshold: 0 });
+
+    targets.forEach(t => observer.observe(t));
+  })();
 
   function escapeHtml(str){
     return String(str || '').replace(/[&<>"']/g, s => ({
