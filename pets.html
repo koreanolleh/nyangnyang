@@ -56,6 +56,15 @@
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .tile:hover .tile-caption{ opacity:1; }
+  .tile-likes{
+    position:absolute; top:6px; right:6px; z-index:2;
+    background:rgba(20,15,10,0.55); color:#fff; font-size:0.68rem; font-weight:700;
+    padding:3px 7px; border-radius:999px;
+  }
+  .tile-likes.liked{ color:#ff8a9e; }
+  .like-btn{ background:#fff; color:var(--ink); border:1px solid var(--line); }
+  .like-btn.liked{ background:#ffeef1; color:#e0503f; border-color:#f3c9c4; }
+  .like-btn.liked span{ font-weight:800; }
   .empty{ text-align:center; padding:60px 20px; color:var(--ink-soft); grid-column:1/-1; }
 
   .skeleton{
@@ -107,7 +116,7 @@
   .photo-name{ font-weight:800; font-size:0.98rem; margin:0 0 2px; }
   .photo-nick{ font-size:0.78rem; color:var(--ink-soft); margin:0 0 8px; }
   .photo-caption{ font-size:0.9rem; color:var(--ink); margin:0 0 14px; word-break:break-word; line-height:1.5; }
-  .photo-actions{ display:flex; gap:8px; }
+  .photo-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 
   /* 모달 공통 */
   .overlay{
@@ -240,6 +249,12 @@
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   let isAdmin = false;
+
+  function getVisitorId(){
+    let vid = localStorage.getItem('nyang_vid');
+    if(!vid){ vid = crypto.randomUUID(); localStorage.setItem('nyang_vid', vid); }
+    return vid;
+  }
   let pageLoadedAt = Date.now();
   let editingId = null;
 
@@ -288,24 +303,34 @@
   }
 
   let currentPhotos = [];
+  let myLikes = new Set();
   const PAGE_SIZE = 24;
   let currentOffset = 0;
 
+  async function loadMyLikes(){
+    try{
+      const { data } = await sb.rpc('get_my_likes', { p_visitor_id: getVisitorId() });
+      myLikes = new Set(data || []);
+    }catch(e){ myLikes = new Set(); }
+  }
+
   function tileHtml(p){
+    const liked = myLikes.has(p.id);
     return `
       <div class="tile" onclick="openLightbox(${p.id})">
         <img src="${p.image_url}" alt="${escapeHtml(p.pet_name)}" loading="lazy" decoding="async">
         <div class="tile-caption">${escapeHtml(p.pet_name)}</div>
+        <div class="tile-likes ${liked ? 'liked' : ''}">♥ ${p.like_count || 0}</div>
       </div>`;
   }
 
   async function loadGallery(){
     const grid = document.getElementById('grid');
     currentOffset = 0;
-    const { data, error } = await sb
-      .from('pet_photos_public')
-      .select('*')
-      .range(0, PAGE_SIZE - 1);
+    const [{ data, error }] = await Promise.all([
+      sb.from('pet_photos_with_likes').select('*').range(0, PAGE_SIZE - 1),
+      loadMyLikes()
+    ]);
 
     if(error){
       grid.innerHTML = `<p class="empty">불러오지 못했어요: ${error.message}</p>`;
@@ -328,7 +353,7 @@
     btn.disabled = true;
     btn.textContent = '불러오는 중...';
     const { data, error } = await sb
-      .from('pet_photos_public')
+      .from('pet_photos_with_likes')
       .select('*')
       .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
@@ -345,9 +370,14 @@
 
   // ===== 라이트박스 (사진 확대 + 좌우 스와이프) =====
   function actionsHtml(p){
-    return isAdmin
+    const liked = myLikes.has(p.id);
+    const editOrDelete = isAdmin
       ? `<button class="btn danger small" onclick="adminDelete(${p.id})">삭제(관리자)</button>`
       : `<button class="btn ghost small" onclick="openEditFromLightbox(${p.id}, '${escapeHtml(p.pet_name).replace(/'/g,"\\'")}', '${escapeHtml(p.caption || '').replace(/'/g,"\\'")}')">수정/삭제</button>`;
+    return `
+      <button class="btn like-btn ${liked ? 'liked' : ''} small" id="likeBtn-${p.id}" onclick="handleLike(${p.id})">♥ <span id="likeCount-${p.id}">${p.like_count || 0}</span></button>
+      <button class="btn ghost small" onclick="makeShareCard(${p.id})">🖼️ 카드 만들기</button>
+      ${editOrDelete}`;
   }
 
   function slideHtml(p){
@@ -389,6 +419,141 @@
     const targetSlide = track.querySelector(`[data-id="${id}"]`);
     if(targetSlide){
       targetSlide.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
+    }
+  };
+
+  // ===== 좋아요 =====
+  window.handleLike = async function(id){
+    const btn = document.getElementById(`likeBtn-${id}`);
+    if(btn) btn.disabled = true;
+    try{
+      const { data, error } = await sb.rpc('toggle_like', {
+        p_photo_id: id, p_visitor_id: getVisitorId()
+      });
+      if(error) throw error;
+
+      if(data.liked) myLikes.add(id); else myLikes.delete(id);
+
+      const p = currentPhotos.find(x => x.id === id);
+      if(p) p.like_count = data.count;
+
+      const countEl = document.getElementById(`likeCount-${id}`);
+      if(countEl) countEl.textContent = data.count;
+      if(btn) btn.classList.toggle('liked', data.liked);
+
+      const tileBadge = document.querySelector(`.tile[onclick="openLightbox(${id})"] .tile-likes`);
+      if(tileBadge){
+        tileBadge.textContent = `♥ ${data.count}`;
+        tileBadge.classList.toggle('liked', data.liked);
+      }
+    }catch(e){
+      alert('좋아요 처리에 실패했어요');
+    }finally{
+      if(btn) btn.disabled = false;
+    }
+  };
+
+  // ===== 공유 카드 만들기 =====
+  function loadImageEl(src){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  function roundRectPath(ctx, x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  async function buildShareCard(p){
+    try{ await document.fonts.load("700 60px 'Gaegu'"); }catch(e){}
+
+    const W = 1080, H = 1350;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#fff4d6';
+    ctx.fillRect(0, 0, W, H);
+
+    const box = { x: 64, y: 64, w: W - 128, h: 980 };
+    const img = await loadImageEl(p.image_url);
+
+    ctx.save();
+    roundRectPath(ctx, box.x, box.y, box.w, box.h, 32);
+    ctx.clip();
+    const scale = Math.max(box.w / img.width, box.h / img.height);
+    const dw = img.width * scale, dh = img.height * scale;
+    ctx.drawImage(img, box.x + (box.w - dw) / 2, box.y + (box.h - dh) / 2, dw, dh);
+    ctx.restore();
+
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = '#ff6b5b';
+    roundRectPath(ctx, box.x, box.y, box.w, box.h, 32);
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#2b2438';
+    ctx.font = "700 66px 'Gaegu', sans-serif";
+    ctx.fillText(p.pet_name, W / 2, box.y + box.h + 100);
+
+    ctx.font = "400 32px 'Pretendard', sans-serif";
+    ctx.fillStyle = '#6b6178';
+    ctx.fillText('by ' + p.nickname, W / 2, box.y + box.h + 150);
+
+    if(p.caption){
+      ctx.font = "400 30px 'Pretendard', sans-serif";
+      ctx.fillStyle = '#2b2438';
+      const maxWidth = W - 160;
+      let line = p.caption.length > 40 ? p.caption.slice(0, 40) + '…' : p.caption;
+      ctx.fillText(line, W / 2, box.y + box.h + 200, maxWidth);
+    }
+
+    ctx.font = "700 30px 'Gaegu', sans-serif";
+    ctx.fillStyle = '#e0503f';
+    ctx.fillText('🐾 냥냥사진관 · nyangnyang.kr', W / 2, H - 48);
+
+    return canvas;
+  }
+
+  window.makeShareCard = async function(id){
+    const p = currentPhotos.find(x => x.id === id);
+    if(!p) return;
+    const btn = event && event.target ? event.target.closest('button') : null;
+    if(btn){ btn.disabled = true; btn.textContent = '만드는 중...'; }
+
+    try{
+      const canvas = await buildShareCard(p);
+      canvas.toBlob(async (blob) => {
+        if(!blob){ alert('카드 생성에 실패했어요'); return; }
+        const fileName = `${p.pet_name}-냥냥사진관.png`;
+        const file = new File([blob], fileName, { type: 'image/png' });
+
+        if(navigator.canShare && navigator.canShare({ files: [file] })){
+          try{
+            await navigator.share({ files: [file], title: `${p.pet_name} 자랑카드`, text: '냥냥사진관에서 만든 카드예요 🐾' });
+          }catch(e){ /* 사용자가 취소한 경우 등 - 무시 */ }
+        }else{
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = fileName;
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 3000);
+        }
+      }, 'image/png');
+    }catch(e){
+      alert('카드를 만들지 못했어요: ' + e.message);
+    }finally{
+      if(btn){ btn.disabled = false; btn.textContent = '🖼️ 카드 만들기'; }
     }
   };
 
@@ -588,10 +753,8 @@
   // ===== 방문 통계 =====
   (function trackVisit(){
     try{
-      let vid = localStorage.getItem('nyang_vid');
-      if(!vid){ vid = crypto.randomUUID(); localStorage.setItem('nyang_vid', vid); }
       sb.from('page_views').insert({
-        path: location.pathname, visitor_id: vid, referrer: document.referrer || null
+        path: location.pathname, visitor_id: getVisitorId(), referrer: document.referrer || null
       }).then(()=>{}).catch(()=>{});
     }catch(e){}
   })();

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>냥냥 출석체크 · 스티커북</title>
+<meta name="description" content="매일 출석하고 귀여운 스티커를 모아보세요.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://jqgqaityiirpheazmslv.supabase.co">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#fff4d6; --paper:#ffffff; --ink:#2b2438; --ink-soft:#6b6178;
+    --coral:#ff6b5b; --coral-deep:#e0503f; --mint:#1fb6a8; --line:rgba(43,36,56,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Pretendard', -apple-system, sans-serif; line-height:1.6;
+  }
+  a{ color:inherit; text-decoration:none; }
+  .wrap{ max-width:640px; margin:0 auto; padding:40px 20px 80px; }
+  .back{ font-size:0.85rem; color:var(--ink-soft); }
+  h1{ font-family:'Gaegu', sans-serif; font-size:2rem; margin:18px 0 4px; }
+  .sub{ color:var(--ink-soft); font-size:0.92rem; margin:0 0 24px; }
+
+  .checkin-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:22px;
+    padding:28px; text-align:center; margin-bottom:24px;
+  }
+  .streak-num{ font-family:'Gaegu', sans-serif; font-size:3rem; color:var(--coral-deep); line-height:1; }
+  .streak-label{ font-size:0.85rem; color:var(--ink-soft); margin:4px 0 20px; }
+  .checkin-btn{
+    background:var(--coral); color:#fff; border:none; border-radius:999px;
+    padding:14px 32px; font-size:1rem; font-weight:700; cursor:pointer; font-family:'Gaegu', sans-serif;
+  }
+  .checkin-btn:hover{ background:var(--coral-deep); }
+  .checkin-btn:disabled{ background:#ddd1c0; cursor:not-allowed; }
+  .checkin-btn.done{ background:var(--mint); }
+
+  .reveal{
+    margin-top:16px; font-size:0.9rem; color:var(--ink-soft); min-height:20px;
+  }
+  .reveal .sticker-big{ font-size:2.4rem; display:block; margin-bottom:6px; animation:pop 0.4s ease; }
+  @keyframes pop{ 0%{ transform:scale(0.4); opacity:0; } 60%{ transform:scale(1.15); } 100%{ transform:scale(1); opacity:1; } }
+
+  .book{
+    background:var(--paper); border:1px solid var(--line); border-radius:22px; padding:24px;
+  }
+  .book h2{ font-size:1.05rem; margin:0 0 4px; }
+  .book .book-sub{ font-size:0.8rem; color:var(--ink-soft); margin:0 0 18px; }
+  .sticker-grid{
+    display:grid; grid-template-columns:repeat(5, 1fr); gap:10px;
+  }
+  .sticker-slot{
+    aspect-ratio:1/1; border-radius:14px; display:flex; align-items:center; justify-content:center;
+    font-size:1.7rem; background:#fdf6e8; border:1.5px dashed var(--line);
+  }
+  .sticker-slot.collected{
+    background:linear-gradient(160deg, #fff1e0, #ffe1c4); border:1.5px solid var(--coral);
+  }
+  .sticker-slot.locked{ color:transparent; text-shadow:0 0 0 rgba(0,0,0,0); filter:grayscale(1) opacity(0.35); }
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal .sticker-big{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <a class="back" href="index.html">← 냥냥 홈으로</a>
+  <h1>📅 냥냥 출석체크</h1>
+  <p class="sub">매일 한 번 출석하고 스티커를 모아보세요</p>
+
+  <div class="checkin-card">
+    <div class="streak-num" id="totalDays">-</div>
+    <div class="streak-label">누적 출석 일수</div>
+    <button class="checkin-btn" id="checkinBtn">오늘 출석하기</button>
+    <div class="reveal" id="reveal"></div>
+  </div>
+
+  <div class="book">
+    <h2>🐾 스티커북</h2>
+    <p class="book-sub"><span id="collectedCount">0</span> / 20종 수집</p>
+    <div class="sticker-grid" id="stickerGrid"></div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://jqgqaityiirpheazmslv.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_DeR9x8Vih8vCIWAeJ4Llfw_MNhpXnHJ";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const STICKERS = ['🐱','🐶','🐾','🦴','🐟','🧶','🐭','🦮','🐩','🐈','🐕','🐹','🐰','🦊','🐻','🐼','🦁','🐯','🐮','🐷'];
+
+  function getVisitorId(){
+    let vid = localStorage.getItem('nyang_vid');
+    if(!vid){ vid = crypto.randomUUID(); localStorage.setItem('nyang_vid', vid); }
+    return vid;
+  }
+
+  function renderStickerBook(collectedSet){
+    document.getElementById('collectedCount').textContent = collectedSet.size;
+    document.getElementById('stickerGrid').innerHTML = STICKERS.map((emoji, i) => {
+      const collected = collectedSet.has(i);
+      return `<div class="sticker-slot ${collected ? 'collected' : 'locked'}">${collected ? emoji : '?'}</div>`;
+    }).join('');
+  }
+
+  async function refreshStatus(){
+    const { data, error } = await sb.rpc('get_my_attendance', { p_visitor_id: getVisitorId() });
+    if(error || !data) return;
+
+    document.getElementById('totalDays').textContent = data.total_days;
+    renderStickerBook(new Set(data.stickers || []));
+
+    const btn = document.getElementById('checkinBtn');
+    if(data.checked_today){
+      btn.textContent = '오늘 출석 완료!';
+      btn.disabled = true;
+      btn.classList.add('done');
+    }
+  }
+
+  document.getElementById('checkinBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('checkinBtn');
+    btn.disabled = true;
+    btn.textContent = '처리 중...';
+
+    const { data, error } = await sb.rpc('check_in', { p_visitor_id: getVisitorId() });
+    if(error || !data){
+      btn.disabled = false;
+      btn.textContent = '오늘 출석하기';
+      document.getElementById('reveal').textContent = '오류가 발생했어요. 다시 시도해주세요.';
+      return;
+    }
+
+    if(data.already){
+      btn.textContent = '오늘 출석 완료!';
+      btn.classList.add('done');
+      await refreshStatus();
+      return;
+    }
+
+    const emoji = STICKERS[data.sticker];
+    document.getElementById('reveal').innerHTML = `
+      <span class="sticker-big">${emoji}</span>
+      오늘의 스티커를 획득했어요!
+    `;
+    btn.textContent = '오늘 출석 완료!';
+    btn.classList.add('done');
+    await refreshStatus();
+  });
+
+  // 방문 통계
+  (function trackVisit(){
+    try{
+      sb.from('page_views').insert({
+        path: location.pathname, visitor_id: getVisitorId(), referrer: document.referrer || null
+      }).then(()=>{}).catch(()=>{});
+    }catch(e){}
+  })();
+
+  refreshStatus();
+</script>
+</body>
+</html>

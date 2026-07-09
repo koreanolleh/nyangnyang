@@ -180,6 +180,7 @@
       <a href="#tests">퀴즈</a>
       <a href="#games">게임</a>
       <a href="pets.html">멍냥사진관</a>
+      <a href="attendance.html">출석체크</a>
       <a href="#toons">4컷툰</a>
     </nav>
   </div>
@@ -311,6 +312,12 @@
     <h2 class="cat-title"><span class="cat-dot dot-pets"></span>멍냥사진관</h2>
     <span class="cat-more" id="petsCount">불러오는 중…</span>
   </div>
+
+  <div id="topPetsWrap" style="display:none; padding:0 20px 14px;">
+    <p style="font-size:0.82rem; font-weight:700; color:var(--ink-soft); margin:0 0 10px;">🏆 이번 주 인기 TOP 3</p>
+    <div id="topPetsRow" style="display:flex; gap:12px; overflow-x:auto;"></div>
+  </div>
+
   <div class="row" id="petsRow">
     <p style="color:var(--ink-soft); font-size:0.85rem; padding:0 20px;">불러오는 중…</p>
   </div>
@@ -395,7 +402,27 @@
     }
   }
 
+  async function loadTopPets(){
+    try{
+      const { data, error } = await sb.rpc('get_top_pets_this_week', { limit_count: 3 });
+      if(error || !data || data.length === 0) return;
+
+      const medals = ['🥇','🥈','🥉'];
+      document.getElementById('topPetsRow').innerHTML = data.map((p, i) => `
+        <a href="pets.html" style="flex:0 0 96px; text-align:center; text-decoration:none;">
+          <div style="width:88px; height:88px; border-radius:50%; overflow:hidden; border:3px solid var(--coral); margin:0 auto 6px;">
+            <img src="${p.image_url}" alt="${escapePetsHtml(p.pet_name)}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover;">
+          </div>
+          <p style="margin:0; font-size:0.78rem; font-weight:700; color:var(--ink);">${medals[i] || ''} ${escapePetsHtml(p.pet_name)}</p>
+          <p style="margin:0; font-size:0.7rem; color:var(--ink-soft);">♥ ${p.like_count}</p>
+        </a>
+      `).join('');
+      document.getElementById('topPetsWrap').style.display = 'block';
+    }catch(e){ /* 인기 코너는 실패해도 조용히 무시 */ }
+  }
+
   loadPetsPreview();
+  loadTopPets();
 </script>
 
 </body>

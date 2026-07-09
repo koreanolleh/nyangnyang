@@ -21,6 +21,11 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://nyangnyang.kr/attendance.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://nyangnyang.kr/pets.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
