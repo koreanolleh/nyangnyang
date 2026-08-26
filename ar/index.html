@@ -283,8 +283,11 @@
   arBtn.addEventListener('click', () => { try { mv.activateAR(); } catch(err){ setStatus('AR을 열지 못했어요', false); } });
   document.querySelectorAll('.swatch').forEach(b => b.addEventListener('click', () => load(b.dataset.key)));
 
-  let saved = null; try { saved = localStorage.getItem('dg-mat-color'); } catch(e){}
-  load(saved && MODELS[saved] ? saved : 'warm_sunlight');
+  let want = null;
+  const qc = new URLSearchParams(location.search).get('c');
+  if (qc && MODELS[qc]) want = qc;
+  if (!want) { try { const sv = localStorage.getItem('dg-mat-color'); if (sv && MODELS[sv]) want = sv; } catch(e){} }
+  load(want || 'warm_sunlight');
 })();
 </script>
 
