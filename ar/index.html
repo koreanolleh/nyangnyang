@@ -112,6 +112,12 @@
     h1 { font-size: 26px; }
   }
   @media (prefers-reduced-motion: reduce) { .swatch { transition: none; } }
+  .inapp-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+  .mini { appearance: none; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+    border-radius: 999px; padding: 10px 16px; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .mini.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .mini:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  #copied { color: var(--ok); font-weight: 500; }
   .handoff { display: none; }
   html.in-kakao .app { display: none !important; }
   html.in-kakao .handoff { display: flex; min-height: 100dvh; align-items: center; justify-content: center; text-align: center; padding: 32px; }
@@ -189,6 +195,16 @@
       <button class="swatch" data-key="active_steps" aria-pressed="false"><img src="data:image/jpeg;base64,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" alt=""><span>Active steps</span></button>
     </div>
 
+    <div class="note warn" id="inapp" hidden>
+      <b>앱 안에서는 카메라 AR이 열리지 않아요</b>
+      <span>네이버·인스타그램 같은 앱에 들어있는 브라우저에서는 아이폰이 AR을 막아둡니다. Safari로 열면 바로 됩니다.</span>
+      <div class="inapp-actions">
+        <button class="mini" id="openSafari" type="button">Safari에서 열기</button>
+        <button class="mini ghost" id="copyLink" type="button">주소 복사</button>
+      </div>
+      <span id="copied" hidden>주소를 복사했어요. Safari 주소창에 붙여넣어 주세요.</span>
+    </div>
+
     <div class="status" id="status"><i></i><span>모델 준비 중</span></div>
 
     <div class="note" id="howto">
@@ -203,7 +219,7 @@
     <div class="note" id="trouble">
       <b>카메라가 안 켜질 때</b>
       <ol class="steps">
-        <li>카카오톡에서 열면 자동으로 Safari/Chrome으로 넘어가요. 인스타그램 등 다른 앱 안에서 열렸다면 링크를 복사해서 <b>Safari(iPhone)</b> 또는 <b>Chrome(Android)</b>에서 여세요.</li>
+        <li>카카오톡에서 열면 자동으로 Safari/Chrome으로 넘어가요. 네이버·인스타그램 등 다른 앱 안에서 열렸다면 위의 <b>Safari에서 열기</b>를 눌러주세요.</li>
         <li>iPhone: 흰 화면에 매트가 뜨면 아래쪽 <b>AR</b> 탭을 누르세요. 카메라 권한을 물으면 허용.</li>
         <li>매트가 떨리거나 미끄러지면: 놓기 전에 바닥을 <b>2~3초 천천히 훑어</b> 인식시키고, 조명을 밝게, 무늬 없는 단색 바닥보다는 결이 있는 바닥에서 더 안정적이에요. 잘못 놓였으면 화면을 한 번 탭하면 다시 놓여요.</li>
         <li>Android: Google Play에서 <b>Google Play AR 서비스</b>(ARCore) 설치가 필요할 수 있어요. 설치 안내가 뜨면 설치 후 다시 시도.</li>
@@ -247,6 +263,9 @@
   const status = document.getElementById('status');
   const unsupported = document.getElementById('unsupported');
   const howto = document.getElementById('howto');
+  const inapp = document.getElementById('inapp');
+  // 앱 내장 브라우저(네이버·인스타·페북·라인·다음)에서는 아이폰 AR 퀵룩이 동작하지 않고 파일 다운로드로 떨어진다
+  const IN_APP = /NAVER\(inapp|Instagram|FBAN|FBAV|FB_IAB|Line\/|DaumApps|KAKAOTALK/i.test(navigator.userAgent);
   let current = 'warm_sunlight';
 
   function setStatus(text, ready){ status.querySelector('span').textContent = text; status.classList.toggle('ready', !!ready); }
@@ -262,6 +281,11 @@
 
   mv.addEventListener('load', () => {
     setStatus('3D 모델 준비 완료', true);
+    if (isIOS && IN_APP) {
+      arLink.hidden = true; arBtn.hidden = true; inapp.hidden = false; howto.hidden = true; unsupported.hidden = true;
+      document.getElementById('trouble').hidden = true;
+      setStatus('3D 모델 준비 완료 · AR은 Safari에서', true); return;
+    }
     if (isIOS && arLink.href && !arLink.href.endsWith('#')) { arLink.hidden = false; arBtn.hidden = true; unsupported.hidden = true; howto.hidden = false; return; }
     if (mv.canActivateAR) {
       arBtn.disabled = false; arLabel.textContent = '내 방에 놓아보기';
@@ -281,6 +305,21 @@
   });
 
   arBtn.addEventListener('click', () => { try { mv.activateAR(); } catch(err){ setStatus('AR을 열지 못했어요', false); } });
+  document.getElementById('openSafari').addEventListener('click', () => {
+    location.href = 'x-safari-' + location.href;
+    setTimeout(() => { document.getElementById('copyLink').click(); }, 900);
+  });
+  document.getElementById('copyLink').addEventListener('click', async () => {
+    const url = location.href;
+    let ok = false;
+    try { await navigator.clipboard.writeText(url); ok = true; } catch (e) {
+      try { const t = document.createElement('textarea'); t.value = url; t.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(t); t.select(); t.setSelectionRange(0, 99999); ok = document.execCommand('copy'); t.remove(); } catch (e2) {}
+    }
+    const c = document.getElementById('copied');
+    c.textContent = ok ? '주소를 복사했어요. Safari 주소창에 붙여넣어 주세요.' : location.href;
+    c.hidden = false;
+  });
   document.querySelectorAll('.swatch').forEach(b => b.addEventListener('click', () => load(b.dataset.key)));
 
   let want = null;
