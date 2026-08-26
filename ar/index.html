@@ -112,10 +112,46 @@
     h1 { font-size: 26px; }
   }
   @media (prefers-reduced-motion: reduce) { .swatch { transition: none; } }
+  .handoff { display: none; }
+  html.in-kakao .app { display: none !important; }
+  html.in-kakao .handoff { display: flex; min-height: 100dvh; align-items: center; justify-content: center; text-align: center; padding: 32px; }
+  .handoff .inner { display: grid; gap: 14px; justify-items: center; max-width: 320px; }
+  .handoff .brand { margin-bottom: 8px; }
+  .handoff p { margin: 0; color: var(--ink-2); font-size: 14px; }
+  .handoff a { color: var(--ink); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+  .handoff .spin { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--ink-2); animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .handoff .spin { animation: none; } }
 </style>
 </head>
 <body>
 
+<script>
+  // Runs before any content paints: inside the KakaoTalk in-app browser, show only a blank hand-off screen
+  // and immediately pass the page to Safari/Chrome (the in-app browser can't open AR).
+  (function(){
+    if (/KAKAOTALK/i.test(navigator.userAgent)) {
+      document.documentElement.classList.add('in-kakao');
+      var url = location.href.split('#')[0];
+      var ext = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
+      var ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      location.href = ext;
+      // Best-effort: ask KakaoTalk to close its in-app browser so nothing is left behind (undocumented schemes)
+      setTimeout(function(){ location.href = ios ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close'; }, 700);
+      setTimeout(function(){ location.href = ios ? 'kakaotalk://inappbrowser/close' : 'kakaoweb://closeBrowser'; }, 1400);
+      window.__dgExt = ext;
+    }
+  })();
+</script>
+
+<div class="handoff" aria-live="polite">
+  <div class="inner">
+    <div class="brand">Design:Gym</div>
+    <div class="spin" aria-hidden="true"></div>
+    <p>브라우저에서 열고 있어요…</p>
+    <a id="handoffLink" href="#">바로 안 열리면 여기를 눌러주세요</a>
+  </div>
+</div>
 
 <div class="app">
   <header>
@@ -201,10 +237,7 @@
   };
   // AR Quick Look options: keep real size (no pinch-scaling) and show a banner with gesture hints inside AR
   const QL_PARAMS = '#allowsContentScaling=0';
-  // KakaoTalk in-app browser can't open AR: hand the page to Safari/Chrome
-  if (/KAKAOTALK/i.test(navigator.userAgent)) {
-    location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
-  }
+  if (window.__dgExt) { const hl = document.getElementById('handoffLink'); hl.href = window.__dgExt; }
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const arLink = document.getElementById('arLink');
   const arLinkImg = document.getElementById('arLinkImg');
