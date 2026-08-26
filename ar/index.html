@@ -19,21 +19,25 @@
     --accent-soft: #DCE4EE;
     --ok: #4B7A5A;
     --shadow: 0 18px 40px rgba(54, 40, 32, .10);
-    --viewer-bg: #EDE8E3;
+    --viewer-bg: #2A2628;
+    --stage-ink: #B9AFAB;
+    --stage-ink-2: #7E7573;
+    --stage-btn: #F6F3F0;
+    --stage-btn-ink: #2A2729;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #1B191B; --surface: #242224; --surface-2: #2D2A2D;
       --ink: #EEE8E3; --ink-2: #ADA4A2; --ink-3: #6F6769; --line: #363235;
       --accent: #9FB4D0; --accent-ink: #14202F; --accent-soft: #2B3543;
-      --ok: #8CC29D; --shadow: 0 18px 40px rgba(0,0,0,.45); --viewer-bg: #201E20;
+      --ok: #8CC29D; --shadow: 0 18px 40px rgba(0,0,0,.45); --viewer-bg: #161416; --stage-ink: #ADA4A2; --stage-ink-2: #6F6769; --stage-btn: #EEE8E3; --stage-btn-ink: #1B191B;
     }
   }
   :root[data-theme="dark"] {
     --bg: #1B191B; --surface: #242224; --surface-2: #2D2A2D;
     --ink: #EEE8E3; --ink-2: #ADA4A2; --ink-3: #6F6769; --line: #363235;
     --accent: #9FB4D0; --accent-ink: #14202F; --accent-soft: #2B3543;
-    --ok: #8CC29D; --shadow: 0 18px 40px rgba(0,0,0,.45); --viewer-bg: #201E20;
+    --ok: #8CC29D; --shadow: 0 18px 40px rgba(0,0,0,.45); --viewer-bg: #161416; --stage-ink: #ADA4A2; --stage-ink-2: #6F6769; --stage-btn: #EEE8E3; --stage-btn-ink: #1B191B;
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
@@ -55,13 +59,14 @@
   model-viewer { width: 100%; height: 100%; min-height: 58dvh; background: transparent; --poster-color: transparent; }
   .stage .hint {
     position: absolute; right: 16px; top: 14px; text-align: right;
-    font-size: 11px; color: var(--ink-3); pointer-events: none; letter-spacing: .02em;
+    font-size: 11px; color: var(--stage-ink-2); pointer-events: none; letter-spacing: .02em;
   }
   .ar-dock { position: absolute; left: 0; right: 0; bottom: 16px; display: flex; justify-content: center; padding: 0 16px; pointer-events: none; }
-  .ar-dock .ar-btn { pointer-events: auto; width: auto; min-width: 230px; max-width: 100%; padding: 14px 26px; }
+  .ar-dock .ar-btn { pointer-events: auto; width: auto; min-width: 230px; max-width: 100%; padding: 14px 26px; background: var(--stage-btn); color: var(--stage-btn-ink); box-shadow: 0 14px 34px rgba(0,0,0,.35); }
+  .ar-dock .ar-btn[disabled] { opacity: .6; }
   .dim {
     position: absolute; top: 14px; left: 16px; font-family: "Manrope", sans-serif; font-size: 12px; letter-spacing: .08em;
-    color: var(--ink-2); font-variant-numeric: tabular-nums;
+    color: var(--stage-ink); font-variant-numeric: tabular-nums;
   }
 
   .panel { padding: 18px 20px calc(20px + env(safe-area-inset-bottom)); display: grid; gap: 18px; }
