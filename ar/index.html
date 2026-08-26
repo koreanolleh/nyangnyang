@@ -285,7 +285,7 @@
     document.querySelectorAll('.swatch').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.key === key)));
     setStatus('모델 준비 중', false);
     mv.src = MODELS[key];
-    if (USDZ[key] && !USDZ[key].startsWith('__')) { mv.setAttribute('ios-src', USDZ[key]); arLink.href = USDZ[key]; }
+    if (USDZ[key] && !USDZ[key].startsWith('__')) { mv.setAttribute('ios-src', USDZ[key]); arLink.href = USDZ[key] + QL_PARAMS; }
     try { localStorage.setItem('dg-mat-color', key); } catch(e){}
   }
 
