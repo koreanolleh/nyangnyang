@@ -353,5 +353,24 @@
 })();
 </script>
 
+<!-- ?auto=1 로 열면 카메라 AR 자동 실행 (2026-09-01 추가) -->
+<script>
+(function () {
+  if (!new URLSearchParams(location.search).get('auto')) return;
+  var tries = 0;
+  var iv = setInterval(function () {
+    tries++;
+    var mv = document.querySelector('model-viewer');
+    if (mv && mv.canActivateAR) {
+      clearInterval(iv);
+      setTimeout(function () {
+        try { mv.activateAR(); } catch (e) {}
+      }, 300);
+    }
+    if (tries > 60) clearInterval(iv);
+  }, 250);
+})();
+</script>
+
 </body>
 </html>
