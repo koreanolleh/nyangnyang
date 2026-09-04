@@ -47,7 +47,6 @@
     if (!block()) { var n = 0, iv = setInterval(function () { if (block() || ++n > 80) clearInterval(iv); }, 150); }
 
     var url = location.href.replace(/[?&]auto=1/, '');
-    url += (url.indexOf('?') < 0 ? '?' : '&') + 'auto=1';
 
     var w = document.createElement('div');
     w.id = 'dg-xr-inapp';
@@ -79,9 +78,45 @@
               ev.target.closest('a.dg-ar-pill, a.dg-ar-live, a.dg-ar-badge, a[href*="scene-viewer"], a[href*="nyangnyang.kr/ar"]');
       if (!a) return;
       ev.preventDefault(); ev.stopPropagation();
-      var url = HOST + '/?c=' + keyFromHref(a.getAttribute('href')) + '&auto=1';
+      var url = HOST + '/?c=' + keyFromHref(a.getAttribute('href'));
       location.href = chromeIntent(url);
     }, true);
+  }
+
+  /* 안드로이드 크롬은 사용자 제스처 없이 WebXR 세션을 못 연다.
+     페이지 자동 실행(auto=1)으로 부르면 실패하면서 구글 Scene Viewer 로 떨어진다.
+     → 제스처가 없는 activateAR 호출은 무시하고, 버튼을 눌러서 들어오게 유도한다. */
+  function requireGesture() {
+    var C = window.customElements && customElements.get('model-viewer');
+    if (!C || !C.prototype || C.prototype.__dgGesture) return !!C;
+    C.prototype.__dgGesture = true;
+    var orig = C.prototype.activateAR;
+    C.prototype.activateAR = function () {
+      var ua = navigator.userActivation;
+      if (ua && ua.isActive === false) return Promise.resolve();   // 자동 호출 → 무시
+      return orig.apply(this, arguments);
+    };
+    return true;
+  }
+  if (!requireGesture()) { var gn = 0, gi = setInterval(function () { if (requireGesture() || ++gn > 80) clearInterval(gi); }, 150); }
+
+  /* auto=1 로 들어왔는데 자동 실행을 막았으니, AR 버튼을 눈에 띄게 해준다. */
+  function nudge() {
+    if (!/[?&]auto=1/.test(location.search)) return;
+    var b = document.getElementById('arBtn');
+    if (!b || b.disabled || b.hidden) return false;
+    if (!document.getElementById('dg-xr-nudge')) {
+      var st = document.createElement('style');
+      st.id = 'dg-xr-nudge';
+      st.textContent = '@keyframes dgxrNudge{0%,100%{box-shadow:0 0 0 0 rgba(26,26,24,.45)}50%{box-shadow:0 0 0 12px rgba(26,26,24,0)}}' +
+                       '#arBtn{animation:dgxrNudge 1.4s ease-out 3}';
+      document.head.appendChild(st);
+    }
+    try { b.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+    return true;
+  }
+  if (/nyangnyang\.kr\/ar/.test(location.href) && !INAPP) {
+    var nn = 0, ni = setInterval(function () { if (nudge() || ++nn > 80) clearInterval(ni); }, 250);
   }
 
   function css() {
