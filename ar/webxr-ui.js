@@ -167,7 +167,7 @@
     document.head.appendChild(s);
   }
 
-  var PRODUCT_NO = { active_steps: 29, before_sunrise: 33, warm_sunlight: 34 };
+  var PRODUCT_NO = { active_steps: 29, before_sunrise: 29, warm_sunlight: 29 };   // 구매는 29번 상품으로 통일
 
   function priceText() {
     var pr = document.querySelector('#span_product_price_text');

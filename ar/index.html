@@ -245,7 +245,7 @@
 </div>
 
 <script type="module" src="./model-viewer.min.js"></script>
-<script src="./webxr-ui.js?v=9" defer></script>
+<script src="./webxr-ui.js?v=10" defer></script>
 <script>
 (function(){
   const MODELS = {
@@ -445,7 +445,7 @@
 <!-- 상품페이지로 돌아가는 구매 동선 (Quick Look 닫은 뒤 막다른 길 방지) -->
 <script>
 (function () {
-  var PN = { active_steps: 29, before_sunrise: 33, warm_sunlight: 34 };
+  var PN = { active_steps: 29, before_sunrise: 29, warm_sunlight: 29 };   // 구매는 29번 상품으로 통일
   var q = new URLSearchParams(location.search);
   var back = q.get('back');
   var color = q.get('c') || '';
