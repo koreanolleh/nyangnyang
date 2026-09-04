@@ -245,7 +245,7 @@
 </div>
 
 <script type="module" src="./model-viewer.min.js"></script>
-<script src="./webxr-ui.js" defer></script>
+<script src="./webxr-ui.js?v=6" defer></script>
 <script>
 (function(){
   const MODELS = {
@@ -402,19 +402,36 @@
     return;
   }
 
-  // 안드로이드: model-viewer 준비되면 자동 실행
-  var tries = 0;
-  var iv = setInterval(function () {
-    tries++;
+  // 안드로이드: 크롬/삼성인터넷은 "사용자가 직접 누른 동작" 없이는 WebXR 카메라를 못 연다.
+  // 자동 실행하면 거부되면서 구글 Scene Viewer 로 떨어지므로, 도착하자마자 큰 버튼 한 번만 누르게 한다.
+  var aw = document.createElement('div');
+  aw.id = 'dg-auto-ar';
+  aw.style.cssText =
+    'position:fixed;inset:0;z-index:99999;background:rgba(20,20,18,.82);' +
+    '-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);' +
+    'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;' +
+    'padding:24px;text-align:center;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",Roboto,sans-serif';
+  aw.innerHTML =
+    '<div style="color:#fff;font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.6">' +
+      '카메라로 내 방에 놓아볼까요?' +
+      '<div style="font-size:12.5px;font-weight:400;opacity:.72;margin-top:7px">' +
+        '카메라 화면에서 매트를 톡 누르면 색상이 바뀝니다' +
+      '</div>' +
+    '</div>' +
+    '<button id="dg-auto-go" style="display:flex;align-items:center;justify-content:center;' +
+      'width:100%;max-width:280px;height:54px;background:#fff;color:#1A1A18;border:0;' +
+      'border-radius:12px;font-size:15.5px;font-weight:700;letter-spacing:-.02em;' +
+      'font-family:inherit;cursor:pointer">카메라 열기</button>' +
+    '<button id="dg-auto-x" style="border:0;background:none;color:rgba(255,255,255,.6);' +
+      'font-size:13px;font-family:inherit;cursor:pointer;padding:6px">3D로 먼저 볼래요</button>';
+  document.body.appendChild(aw);
+
+  document.getElementById('dg-auto-x').addEventListener('click', function () { aw.remove(); });
+  document.getElementById('dg-auto-go').addEventListener('click', function () {
     var mv = document.querySelector('model-viewer');
-    if (mv && mv.canActivateAR) {
-      clearInterval(iv);
-      setTimeout(function () {
-        try { mv.activateAR(); } catch (e) {}
-      }, 300);
-    }
-    if (tries > 60) clearInterval(iv);
-  }, 250);
+    try { mv.activateAR(); } catch (e) {}
+    setTimeout(function () { aw.remove(); }, 600);
+  });
 })();
 </script>
 
