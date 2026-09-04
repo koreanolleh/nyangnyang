@@ -17,15 +17,21 @@
   /* ---------- 1) 인앱 브라우저(네이버/카톡 등)는 WebXR 이 없어서
         구글 Scene Viewer 로 넘어가고 우리 UI 를 못 얹는다.
         AR 링크를 누르면 크롬으로 넘겨준다. ---------- */
+  function keyFromHref(h) {
+    h = decodeURIComponent(h || '');
+    var m = h.match(/[?&]c=([a-z_]+)/) || h.match(/mat_([a-z_]+)\.(?:glb|usdz)/);
+    return (m && ORDER.indexOf(m[1]) >= 0) ? m[1] : ORDER[0];
+  }
+
   if (INAPP) {
     document.addEventListener('click', function (ev) {
-      var a = ev.target && ev.target.closest && ev.target.closest('a[href*="nyangnyang.kr/ar"]');
+      var a = ev.target && ev.target.closest &&
+              ev.target.closest('a.dg-ar-pill, a.dg-ar-live, a.dg-ar-badge, a[href*="scene-viewer"], a[href*="nyangnyang.kr/ar"]');
       if (!a) return;
-      var url = a.href;
-      if (!/^https?:/.test(url)) return;
       ev.preventDefault(); ev.stopPropagation();
-      var bare = url.replace(/^https?:\/\//, '');
-      location.href = 'intent://' + bare + '#Intent;scheme=https;package=com.android.chrome;' +
+      var url = HOST + '/?c=' + keyFromHref(a.getAttribute('href')) + '&auto=1';
+      location.href = 'intent://' + url.replace(/^https?:\/\//, '') +
+                      '#Intent;scheme=https;package=com.android.chrome;' +
                       'S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
     }, true);
   }
@@ -66,7 +72,10 @@
       '.dg-xr-toast span{display:inline-block;padding:9px 18px;border-radius:999px;' +
         'background:rgba(0,0,0,.62);color:#fff;font-size:14px;font-weight:700;letter-spacing:-.3px;' +
         'font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",Roboto,sans-serif}' +
-      '.dg-xr-toast.go{animation:dgxrToast 1.25s ease-out}';
+      '.dg-xr-toast.go{animation:dgxrToast 1.25s ease-out}' +
+      '.dg-xr-tap{position:fixed;left:0;top:0;right:0;bottom:0;display:none;'+
+        'pointer-events:auto;background:transparent;-webkit-tap-highlight-color:transparent}' +
+      '.dg-xr-tap.on{display:block}';
     document.head.appendChild(s);
   }
 
@@ -158,25 +167,26 @@
       next(ui, dx < 0 ? 1 : -1);
     }, { passive: true });
 
-    mv.appendChild(bar); mv.appendChild(wipe); mv.appendChild(toast);
-    ui.bar = bar; ui.wipe = wipe; ui.toast = toast;
+    var tap = document.createElement('div');
+    tap.className = 'dg-xr-tap';
+
+    mv.appendChild(tap); mv.appendChild(bar); mv.appendChild(wipe); mv.appendChild(toast);
+    ui.bar = bar; ui.wipe = wipe; ui.toast = toast; ui.tap = tap;
 
     /* AR 화면 아무데나 톡 → 다음 색상.
        길게 끌면(=매트 옮기기) 무시되도록 이동거리/시간으로 구분. */
-    var root = (mv.shadowRoot && mv.shadowRoot.querySelector('div.default')) || mv;
     var sx = 0, sy = 0, st = 0, valid = false;
-    root.addEventListener('pointerdown', function (ev) {
-      if (!bar.classList.contains('on')) { valid = false; return; }
-      if (ev.target && ev.target.closest && ev.target.closest('.dg-xr')) { valid = false; return; }
+    tap.addEventListener('pointerdown', function (ev) {
       sx = ev.clientX; sy = ev.clientY; st = Date.now(); valid = true;
-    }, true);
-    root.addEventListener('pointerup', function (ev) {
+    });
+    tap.addEventListener('pointerup', function (ev) {
       if (!valid) return;
       valid = false;
-      if (Date.now() - st > 350) return;
-      if (Math.abs(ev.clientX - sx) > 14 || Math.abs(ev.clientY - sy) > 14) return;
+      if (Date.now() - st > 400) return;
+      if (Math.abs(ev.clientX - sx) > 16 || Math.abs(ev.clientY - sy) > 16) return;
       next(ui, 1);
-    }, true);
+    });
+    tap.addEventListener('pointercancel', function () { valid = false; });
 
     return ui;
   }
@@ -191,9 +201,11 @@
       var st = (ev.detail && ev.detail.status) || '';
       if (st === 'session-started' || st === 'object-placed') {
         ui.bar.classList.add('on');
+        ui.tap.classList.add('on');
         mark(ui.bar, keyOf(mv));
       } else {
         ui.bar.classList.remove('on');
+        ui.tap.classList.remove('on');
       }
     });
   }
