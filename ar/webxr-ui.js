@@ -168,7 +168,7 @@
     }, { passive: true });
 
     var tap = document.createElement('div');
-    tap.className = 'dg-xr-tap';
+    tap.className = 'dg-xr-tap interactive';   // interactive → model-viewer 가 XR select 를 막아줘서 DOM 터치가 정상 전달됨
 
     mv.appendChild(tap); mv.appendChild(bar); mv.appendChild(wipe); mv.appendChild(toast);
     ui.bar = bar; ui.wipe = wipe; ui.toast = toast; ui.tap = tap;
@@ -187,6 +187,8 @@
       next(ui, 1);
     });
     tap.addEventListener('pointercancel', function () { valid = false; });
+    // 일부 기기에서 포인터 이벤트가 XR 쪽으로 먹히는 경우 대비 (apply 의 busy 락으로 중복 방지)
+    tap.addEventListener('click', function (ev) { ev.preventDefault(); next(ui, 1); });
 
     return ui;
   }
