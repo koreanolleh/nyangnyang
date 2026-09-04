@@ -245,7 +245,7 @@
 </div>
 
 <script type="module" src="./model-viewer.min.js"></script>
-<script src="./webxr-ui.js?v=8" defer></script>
+<script src="./webxr-ui.js?v=9" defer></script>
 <script>
 (function(){
   const MODELS = {
@@ -441,5 +441,57 @@
 })();
 </script>
 
+
+<!-- 상품페이지로 돌아가는 구매 동선 (Quick Look 닫은 뒤 막다른 길 방지) -->
+<script>
+(function () {
+  var PN = { active_steps: 29, before_sunrise: 33, warm_sunlight: 34 };
+  var q = new URLSearchParams(location.search);
+  var back = q.get('back');
+  var color = q.get('c') || '';
+  var url = back ? decodeURIComponent(back)
+                 : (PN[color] ? 'https://designgym.co.kr/product/detail.html?product_no=' + PN[color] : '');
+  if (!url) return;
+
+  function go() { location.href = url; }
+
+  // Quick Look 하단 배너의 '구매하기'를 누르면 상품페이지로
+  function bind(el) {
+    if (!el || el.__dgBound) return;
+    el.__dgBound = true;
+    el.addEventListener('message', function (ev) {
+      if (ev.data === '_apple_ar_quicklook_button_tapped') go();
+    }, false);
+  }
+  document.addEventListener('message', function (ev) {
+    if (ev.data === '_apple_ar_quicklook_button_tapped') go();
+  }, true);
+
+  var st = document.createElement('style');
+  st.textContent =
+    '.dg-back{position:fixed;left:0;right:0;bottom:0;z-index:9998;' +
+      'padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));' +
+      'background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);' +
+      'box-shadow:0 -6px 22px rgba(0,0,0,.10);' +
+      'font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",Roboto,sans-serif}' +
+    '.dg-back a{display:flex;align-items:center;justify-content:center;gap:8px;height:52px;' +
+      'border-radius:14px;background:#1A1A18;color:#fff;text-decoration:none;' +
+      'font-size:15px;font-weight:800;letter-spacing:-.4px}' +
+    'body{padding-bottom:90px}';
+  document.head.appendChild(st);
+
+  var bar = document.createElement('div');
+  bar.className = 'dg-back';
+  bar.innerHTML = '<a href="' + url + '">디자인짐에서 구매하기</a>';
+  function mount() {
+    if (!document.body) return;
+    document.body.appendChild(bar);
+    bind(document.getElementById('arLink'));
+    bind(document.getElementById('dg-auto-go'));
+    setTimeout(function () { bind(document.getElementById('dg-auto-go')); }, 800);
+  }
+  if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
+})();
+</script>
 </body>
 </html>
