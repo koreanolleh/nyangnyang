@@ -23,16 +23,64 @@
     return (m && ORDER.indexOf(m[1]) >= 0) ? m[1] : ORDER[0];
   }
 
+  function chromeIntent(url) {
+    return 'intent://' + url.replace(/^https?:\/\//, '') +
+           '#Intent;scheme=https;package=com.android.chrome;' +
+           'S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
+  }
+
+  /* 인앱 브라우저에서 AR 페이지에 바로 들어온 경우:
+     구글 Scene Viewer 자동 실행을 막고 "크롬에서 열기" 시트를 띄운다. */
+  function inAppSheet() {
+    if (document.getElementById('dg-xr-inapp')) return;
+
+    // model-viewer 의 자동 AR 실행 차단
+    function block() {
+      var C = window.customElements && customElements.get('model-viewer');
+      if (C && C.prototype && !C.prototype.__dgBlocked) {
+        C.prototype.__dgBlocked = true;
+        C.prototype.activateAR = function () { return Promise.resolve(); };
+        return true;
+      }
+      return false;
+    }
+    if (!block()) { var n = 0, iv = setInterval(function () { if (block() || ++n > 80) clearInterval(iv); }, 150); }
+
+    var url = location.href.replace(/[?&]auto=1/, '');
+    url += (url.indexOf('?') < 0 ? '?' : '&') + 'auto=1';
+
+    var w = document.createElement('div');
+    w.id = 'dg-xr-inapp';
+    w.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:2147483600;' +
+      'padding:18px 18px calc(22px + env(safe-area-inset-bottom,0px));background:#fff;' +
+      'box-shadow:0 -10px 30px rgba(0,0,0,.18);border-radius:20px 20px 0 0;' +
+      'font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",Roboto,sans-serif';
+    w.innerHTML =
+      '<div style="font-size:15px;font-weight:800;color:#1A1A18;letter-spacing:-.4px;margin-bottom:6px">' +
+        '색상 바꿔보기는 크롬에서만 돼요</div>' +
+      '<div style="font-size:13px;line-height:1.5;color:#6B6B66;letter-spacing:-.3px;margin-bottom:14px">' +
+        '네이버·카카오톡 같은 앱 안의 브라우저는 AR 화면에 버튼을 올릴 수 없어요.<br>' +
+        '크롬으로 열면 AR 화면에서 매트 색상을 바로 바꿔볼 수 있습니다.</div>' +
+      '<button id="dg-xr-go" style="width:100%;height:52px;border:0;border-radius:14px;background:#1A1A18;' +
+        'color:#fff;font-size:15px;font-weight:800;letter-spacing:-.4px;font-family:inherit">크롬에서 열기</button>';
+    (document.body || document.documentElement).appendChild(w);
+    w.querySelector('#dg-xr-go').addEventListener('click', function () {
+      location.href = chromeIntent(url);
+    });
+  }
+
   if (INAPP) {
+    if (/nyangnyang\.kr\/ar/.test(location.href)) {
+      if (document.body) inAppSheet();
+      else document.addEventListener('DOMContentLoaded', inAppSheet);
+    }
     document.addEventListener('click', function (ev) {
       var a = ev.target && ev.target.closest &&
               ev.target.closest('a.dg-ar-pill, a.dg-ar-live, a.dg-ar-badge, a[href*="scene-viewer"], a[href*="nyangnyang.kr/ar"]');
       if (!a) return;
       ev.preventDefault(); ev.stopPropagation();
       var url = HOST + '/?c=' + keyFromHref(a.getAttribute('href')) + '&auto=1';
-      location.href = 'intent://' + url.replace(/^https?:\/\//, '') +
-                      '#Intent;scheme=https;package=com.android.chrome;' +
-                      'S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
+      location.href = chromeIntent(url);
     }, true);
   }
 
