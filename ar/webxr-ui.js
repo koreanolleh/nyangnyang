@@ -158,8 +158,40 @@
       '.dg-xr-toast.go{animation:dgxrToast 1.25s ease-out}' +
       '.dg-xr-tap{position:fixed;left:0;top:0;right:0;bottom:0;display:none;'+
         'pointer-events:auto;background:transparent;-webkit-tap-highlight-color:transparent}' +
-      '.dg-xr-tap.on{display:block}';
+      '.dg-xr-tap.on{display:block}' +
+      '.dg-xr-buy{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:54px;'+
+        'margin:0;border:0;border-radius:14px;background:#1A1A18;color:#fff;font-family:inherit;'+
+        'font-size:15px;font-weight:800;letter-spacing:-.4px;box-shadow:0 6px 18px rgba(0,0,0,.32)}' +
+      '.dg-xr-buy s{opacity:.5;font-weight:600;font-size:13px}' +
+      '.dg-xr-buy em{font-style:normal;font-weight:700;opacity:.9}';
     document.head.appendChild(s);
+  }
+
+  var PRODUCT_NO = { active_steps: 29, before_sunrise: 33, warm_sunlight: 34 };
+
+  function priceText() {
+    var pr = document.querySelector('#span_product_price_text');
+    return (pr && /원/.test(pr.textContent)) ? pr.textContent.trim() : '';
+  }
+
+  function exitAR(mv) {
+    try {
+      var b = mv.shadowRoot && mv.shadowRoot.querySelector('#default-exit-webxr-ar-button');
+      if (b) { b.click(); return; }
+    } catch (e) {}
+    try { mv.dispatchEvent(new Event('ar-exit')); } catch (e) {}
+  }
+
+  function goBuy(mv, key) {
+    exitAR(mv);
+    setTimeout(function () {
+      if (/designgym\.co\.kr/i.test(location.hostname)) {
+        var b = document.querySelector('#btnBuy, .btnBuy, .detail-btn--buy, a[href*="order/basket"], .xans-product-action');
+        if (b) { try { b.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { b.scrollIntoView(); } return; }
+      }
+      var no = PRODUCT_NO[key];
+      if (no) location.href = 'https://designgym.co.kr/product/detail.html?product_no=' + no;
+    }, 400);
   }
 
   function keyOf(mv) {
@@ -230,8 +262,19 @@
       row.appendChild(c);
     });
 
+    var buy = document.createElement('button');
+    buy.type = 'button';
+    buy.className = 'dg-xr-buy interactive';
+    var pt = priceText();
+    buy.innerHTML = '구매하기' + (pt ? ' <em>' + pt + '</em>' : '');
+    buy.addEventListener('click', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      goBuy(mv, keyOf(mv));
+    });
+
     bar.appendChild(hint);
     bar.appendChild(row);
+    bar.appendChild(buy);
 
     var wipe = document.createElement('div');  wipe.className = 'dg-xr-wipe';
     var toast = document.createElement('div'); toast.className = 'dg-xr-toast';
